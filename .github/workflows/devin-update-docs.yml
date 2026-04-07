@@ -1,0 +1,68 @@
+name: Update Documentation via Devin
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update-docs:
+    name: Trigger Devin to Update Documentation
+    # Only run when a PR is actually merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Devin session to update documentation
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_BODY=$(cat <<'PRBODY'
+          ${{ github.event.pull_request.body }}
+          PRBODY
+          )
+          REPO="${{ github.repository }}"
+          MERGE_COMMIT="${{ github.event.pull_request.merge_commit_sha }}"
+
+          PROMPT=$(cat <<EOF
+          A pull request was just merged into the $REPO repository. Please review the changes and update any relevant documentation (README.md, inline code comments, API docs, guides, etc.) to reflect the new code.
+
+          PR Details:
+          - Title: $PR_TITLE
+          - Number: #$PR_NUMBER
+          - URL: $PR_URL
+          - Merge commit: $MERGE_COMMIT
+
+          Instructions:
+          1. Check out the $REPO repository at the latest main branch.
+          2. Review the diff from PR #$PR_NUMBER to understand what changed.
+          3. Identify any documentation that needs updating based on the changes (README, code comments, API docs, guides, changelogs, etc.).
+          4. If documentation updates are needed, create a new PR with the changes.
+          5. If no documentation updates are needed, report that the docs are already up to date.
+          EOF
+          )
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.devin.ai/v3/organizations/$DEVIN_ORG_ID/sessions" \
+            -H "Authorization: Bearer $DEVIN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg prompt "$PROMPT" '{prompt: $prompt}')")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            SESSION_URL=$(echo "$BODY" | jq -r '.url // empty')
+            SESSION_ID=$(echo "$BODY" | jq -r '.session_id // empty')
+            echo "Devin session created successfully!"
+            echo "Session ID: $SESSION_ID"
+            echo "Session URL: $SESSION_URL"
+          else
+            echo "Failed to create Devin session (HTTP $HTTP_CODE)"
+            echo "$BODY"
+            exit 1
+          fi
