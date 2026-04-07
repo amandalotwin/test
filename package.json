@@ -8,9 +8,6 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "audit": "node scripts/audit-all.mjs",
-    "audit:flags": "node scripts/audit-flags.mjs",
-    "audit:dead-code": "node scripts/audit-dead-code.mjs",
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {

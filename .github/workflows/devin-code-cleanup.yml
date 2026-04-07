@@ -1,0 +1,129 @@
+name: Devin Code Cleanup & Docs Update
+
+on:
+  # Trigger when a PR is merged to main
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+  # Run weekly on Monday at 9am UTC
+  schedule:
+    - cron: '0 9 * * 1'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  devin-cleanup:
+    name: Trigger Devin Code Cleanup
+    runs-on: ubuntu-latest
+    # For pull_request events, only run when actually merged (not just closed)
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+
+    steps:
+      - name: Build Devin prompt
+        id: prompt
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          MERGE_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            cat <<EOF > /tmp/devin-prompt.txt
+          A pull request was just merged into the $REPO repository. Please perform two tasks:
+
+          ## Task 1: Update Documentation
+          Review the changes from PR #$PR_NUMBER ("$PR_TITLE") and update any documentation
+          (README.md, inline code comments, API docs, guides, changelogs) that is now outdated
+          due to the merged changes.
+
+          PR Details:
+          - Title: $PR_TITLE
+          - Number: #$PR_NUMBER
+          - URL: $PR_URL
+          - Merge commit: $MERGE_COMMIT
+
+          ## Task 2: Code Cleanup Audit
+          Scan the entire codebase for:
+          1. **Dead code**: Unused imports, unreferenced functions/variables, commented-out code blocks
+          2. **Stale feature flags**: Check src/flags/registry.ts for any temporary flags past their
+             expiresAt date, or any temporary flags missing an expiresAt date
+          3. **Redundant code**: Duplicate logic, deprecated patterns, or code that could be simplified
+          4. **Code markers**: TODO, FIXME, HACK, XXX, or DEPRECATED comments that indicate
+             temporary code that should have been cleaned up
+
+          ## Instructions
+          1. Check out the $REPO repository at the latest main branch
+          2. Complete both tasks above
+          3. If any changes are needed, create a single PR with all cleanup changes
+          4. In the PR description, list every issue found and how it was resolved
+          5. If everything is clean, report that no changes are needed
+          EOF
+          else
+            cat <<EOF > /tmp/devin-prompt.txt
+          Perform a scheduled code cleanup audit on the $REPO repository.
+
+          Scan the entire codebase for:
+          1. **Dead code**: Unused imports, unreferenced functions/variables, commented-out code blocks
+          2. **Stale feature flags**: Check src/flags/registry.ts for any temporary flags past their
+             expiresAt date, or any temporary flags missing an expiresAt date
+          3. **Redundant code**: Duplicate logic, deprecated patterns, or code that could be simplified
+          4. **Code markers**: TODO, FIXME, HACK, XXX, or DEPRECATED comments that indicate
+             temporary code that should have been cleaned up
+          5. **Outdated documentation**: README sections, inline comments, or API docs that no longer
+             match the current code
+
+          ## Instructions
+          1. Check out the $REPO repository at the latest main branch
+          2. Run the project linter (npm run lint) and review the results
+          3. Perform a thorough manual review for the issues listed above
+          4. If any changes are needed, create a single PR with all cleanup changes
+          5. In the PR description, list every issue found and how it was resolved
+          6. If everything is clean, report that no changes are needed
+          EOF
+          fi
+
+          echo "prompt_file=/tmp/devin-prompt.txt" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Devin session
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+        run: |
+          if [ -z "$DEVIN_API_KEY" ] || [ -z "$DEVIN_ORG_ID" ]; then
+            echo "::error::Missing DEVIN_API_KEY or DEVIN_ORG_ID secrets. Add them at Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          PROMPT=$(cat /tmp/devin-prompt.txt)
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.devin.ai/v3/organizations/$DEVIN_ORG_ID/sessions" \
+            -H "Authorization: Bearer $DEVIN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg prompt "$PROMPT" '{prompt: $prompt}')")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            SESSION_URL=$(echo "$BODY" | jq -r '.url // empty')
+            SESSION_ID=$(echo "$BODY" | jq -r '.session_id // empty')
+            echo "Devin session created successfully!"
+            echo "Session ID: $SESSION_ID"
+            echo "Session URL: $SESSION_URL"
+            echo "### Devin Session Created" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Session ID**: $SESSION_ID" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Session URL**: $SESSION_URL" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Trigger**: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Failed to create Devin session (HTTP $HTTP_CODE)"
+            echo "$BODY"
+            exit 1
+          fi
