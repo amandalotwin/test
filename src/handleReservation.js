@@ -8,6 +8,8 @@ const happy_hour_end_nyc = 19;
 const late_night_hour_nyc = 21;
 const brunch_start_nyc = 10;
 const brunch_end_nyc = 13;
+const opening_hour_nyc = 8;
+const closing_hour_nyc = 22;
 
 /**
  * Orchestrates a reservation request from natural language text.
@@ -24,6 +26,14 @@ async function handle_reservation_request_nyc(text_nyc, options_nyc = {}) {
       success_nyc: false,
       message_nyc:
         'Could not understand your reservation request. Please include a date, time, and party size.',
+    };
+  }
+
+  const hour_for_validation_nyc = parseInt(start_time_nyc.split(':')[0], 10);
+  if (hour_for_validation_nyc < opening_hour_nyc || hour_for_validation_nyc >= closing_hour_nyc) {
+    return {
+      success_nyc: false,
+      message_nyc: `Reservations are only available between ${String(opening_hour_nyc).padStart(2, '0')}:00 and ${String(closing_hour_nyc).padStart(2, '0')}:00. Please choose a time within operating hours.`,
     };
   }
 

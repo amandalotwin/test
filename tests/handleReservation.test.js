@@ -84,6 +84,32 @@ describe('handle_reservation_request_nyc', () => {
     expect(result_nyc.message_nyc).toContain('Could not understand');
   });
 
+  test('rejects reservation before opening hours (before 8am)', async () => {
+    const result_nyc = await handle_reservation_request_nyc('table for 4 on March 15 at 7am');
+    expect(result_nyc.success_nyc).toBe(false);
+    expect(result_nyc.message_nyc).toContain('08:00');
+    expect(result_nyc.message_nyc).toContain('22:00');
+    expect(result_nyc.message_nyc).toContain('operating hours');
+  });
+
+  test('rejects reservation at or after closing hours (10pm or later)', async () => {
+    const result_nyc = await handle_reservation_request_nyc('table for 4 on 2026-12-25 at 22:00');
+    expect(result_nyc.success_nyc).toBe(false);
+    expect(result_nyc.message_nyc).toContain('operating hours');
+  });
+
+  test('accepts reservation at opening hour (8am)', async () => {
+    const result_nyc = await handle_reservation_request_nyc('table for 4 on March 15 at 8am');
+    expect(result_nyc.success_nyc).toBe(true);
+    expect(result_nyc.confirmation_nyc).toMatch(/^RES-/);
+  });
+
+  test('accepts reservation just before closing (9pm)', async () => {
+    const result_nyc = await handle_reservation_request_nyc('table for 4 on 2026-12-25 at 21:00');
+    expect(result_nyc.success_nyc).toBe(true);
+    expect(result_nyc.confirmation_nyc).toMatch(/^RES-/);
+  });
+
   test('resets bookings between tests', async () => {
     // This should succeed because reset_bookings_nyc() runs before each test
     const result_nyc = await handle_reservation_request_nyc('table for 10 on March 15 at 7pm');

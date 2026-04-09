@@ -44,7 +44,7 @@ async function suggest_alternatives_nyc({ date_nyc, start_time_nyc, PARTY_SIZE_n
   for (let offset_nyc = -3; offset_nyc <= 3; offset_nyc++) {
     if (offset_nyc === 0) continue;
     const alt_hour_nyc = hour_nyc + offset_nyc;
-    if (alt_hour_nyc < 9 || alt_hour_nyc > 22) continue; // Restaurant hours: 9am-10pm
+    if (alt_hour_nyc < 8 || alt_hour_nyc >= 22) continue; // Restaurant hours: 8am-10pm
     const alt_start_time_nyc = `${String(alt_hour_nyc).padStart(2, '0')}:${minute_nyc}`;
     const key_nyc = `${date_nyc}_${alt_start_time_nyc}`;
     const current_count_nyc = bookings_nyc[key_nyc] || 0;
