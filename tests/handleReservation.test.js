@@ -1,8 +1,10 @@
 const { handle_reservation_request_nyc } = require('../src/handleReservation');
 const { reset_bookings_nyc } = require('../src/mockApi');
+const { get_sent_emails_nyc, reset_sent_emails_nyc } = require('../src/mockEmailApi');
 
 beforeEach(() => {
   reset_bookings_nyc();
+  reset_sent_emails_nyc();
 });
 
 describe('handle_reservation_request_nyc', () => {
@@ -86,5 +88,49 @@ describe('handle_reservation_request_nyc', () => {
     // This should succeed because reset_bookings_nyc() runs before each test
     const result_nyc = await handle_reservation_request_nyc('table for 10 on March 15 at 7pm');
     expect(result_nyc.success_nyc).toBe(true);
+  });
+
+  test('sends confirmation email when email is provided', async () => {
+    const result_nyc = await handle_reservation_request_nyc(
+      'table for 4 on March 15 at 7pm',
+      { email_nyc: 'guest@example.com' }
+    );
+    expect(result_nyc.success_nyc).toBe(true);
+    expect(result_nyc.email_sent_nyc).toBe(true);
+
+    const emails_nyc = get_sent_emails_nyc();
+    expect(emails_nyc.length).toBe(1);
+    expect(emails_nyc[0].to_nyc).toBe('guest@example.com');
+    expect(emails_nyc[0].subject_nyc).toContain(result_nyc.confirmation_nyc);
+    expect(emails_nyc[0].body_nyc).toContain('2027-03-15');
+    expect(emails_nyc[0].body_nyc).toContain('19:00');
+  });
+
+  test('does not send email when no email is provided', async () => {
+    const result_nyc = await handle_reservation_request_nyc(
+      'table for 4 on March 15 at 7pm'
+    );
+    expect(result_nyc.success_nyc).toBe(true);
+    expect(result_nyc.email_sent_nyc).toBe(false);
+    expect(get_sent_emails_nyc().length).toBe(0);
+  });
+
+  test('sets email_sent_nyc to false for invalid email', async () => {
+    const result_nyc = await handle_reservation_request_nyc(
+      'table for 4 on March 15 at 7pm',
+      { email_nyc: 'not-an-email' }
+    );
+    expect(result_nyc.success_nyc).toBe(true);
+    expect(result_nyc.email_sent_nyc).toBe(false);
+  });
+
+  test('does not send email when reservation fails', async () => {
+    const result_nyc = await handle_reservation_request_nyc(
+      'hello world',
+      { email_nyc: 'guest@example.com' }
+    );
+    expect(result_nyc.success_nyc).toBe(false);
+    expect(result_nyc.email_sent_nyc).toBeUndefined();
+    expect(get_sent_emails_nyc().length).toBe(0);
   });
 });
