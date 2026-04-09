@@ -16,7 +16,7 @@ describe('handle_reservation_request_nyc', () => {
     expect(result_nyc.confirmation_nyc).toMatch(/^RES-/);
     expect(result_nyc.details_nyc).toEqual({
       date_nyc: '2027-03-15',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
     expect(result_nyc.message_nyc).toContain('Reservation confirmed');
@@ -37,7 +37,7 @@ describe('handle_reservation_request_nyc', () => {
     // Each alternative should have a date and time
     result_nyc.alternatives_nyc.forEach((alt_nyc) => {
       expect(alt_nyc.date_nyc).toBeDefined();
-      expect(alt_nyc.time_nyc).toBeDefined();
+      expect(alt_nyc.start_time_nyc).toBeDefined();
     });
   });
 
@@ -47,7 +47,7 @@ describe('handle_reservation_request_nyc', () => {
 
     const result_nyc = await handle_reservation_request_nyc('table for 2 on March 15 at 7pm');
     const has_original_nyc = result_nyc.alternatives_nyc.some(
-      (a_nyc) => a_nyc.date_nyc === '2027-03-15' && a_nyc.time_nyc === '19:00'
+      (a_nyc) => a_nyc.date_nyc === '2027-03-15' && a_nyc.start_time_nyc === '19:00'
     );
     expect(has_original_nyc).toBe(false);
   });

@@ -2,12 +2,12 @@
  * Parses a natural language reservation request and extracts date, time, and party size.
  *
  * @param {string} text_nyc - Natural language reservation request
- * @returns {{ date_nyc: string|null, time_nyc: string|null, PARTY_SIZE_nyc: number|null }}
+ * @returns {{ date_nyc: string|null, start_time_nyc: string|null, PARTY_SIZE_nyc: number|null }}
  */
 function parse_request_nyc(text_nyc) {
   return {
     date_nyc: parse_date_nyc(text_nyc),
-    time_nyc: parse_time_nyc(text_nyc),
+    start_time_nyc: parse_start_time_nyc(text_nyc),
     PARTY_SIZE_nyc: parse_party_size_nyc(text_nyc),
   };
 }
@@ -84,7 +84,7 @@ function format_date_nyc(year_nyc, month_nyc, day_nyc) {
  * Extracts and normalizes a time from text to HH:MM (24-hour) format.
  * Supports: "7pm", "7:30 PM", "19:00"
  */
-function parse_time_nyc(text_nyc) {
+function parse_start_time_nyc(text_nyc) {
   // 24-hour format: 19:00
   const time_24_match_nyc = text_nyc.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b(?!\s*[ap]m)/i);
   if (time_24_match_nyc) {
