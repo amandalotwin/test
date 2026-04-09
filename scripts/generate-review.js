@@ -1,5 +1,5 @@
 /**
- * Generates a proposed Notion documentation update for Tier 2 changes.
+ * Generates a proposed Notion documentation update for Human Review changes.
  *
  * Reads the analysis JSON from stdin or a file argument, produces a markdown
  * draft at docs/proposed-notion-updates.md describing what documentation
@@ -72,7 +72,7 @@ function extractFunctionSignature(file, functionName) {
 }
 
 function generateReviewDraft(analysis) {
-  const { tier2, tier3 } = analysis;
+  const { tier2 } = analysis;
   const lines = [];
 
   lines.push('# Proposed Notion Documentation Update');
@@ -81,7 +81,7 @@ function generateReviewDraft(analysis) {
   lines.push('> Review this draft and merge the PR to approve these documentation changes.');
   lines.push('');
 
-  // ── Tier 2: Changes needing review ──
+  // ── Changes needing human review ──
   if (tier2.length > 0) {
     lines.push('## Changes Requiring Review');
     lines.push('');
@@ -209,32 +209,13 @@ function generateReviewDraft(analysis) {
     }
   }
 
-  // ── Tier 3: Human-only flags ──
-  if (tier3.length > 0) {
-    lines.push('## Flagged for Human Review (Tier 3)');
-    lines.push('');
-    lines.push(
-      'The following changes require human judgment and should NOT be auto-documented:'
-    );
-    lines.push('');
-    for (const change of tier3) {
-      lines.push(`- **${change.type}**: ${change.description}`);
-    }
-    lines.push('');
-    lines.push(
-      '> These changes may affect customer-facing goals, metrics, or outcomes. ' +
-        'A human should review and manually update the Notion page for these items.'
-    );
-    lines.push('');
-  }
-
   // ── Release Notes ──
   lines.push('## Release Notes Draft');
   lines.push('');
   lines.push('**Suggested release notes entry for this push:**');
   lines.push('');
 
-  const allChanges = [...(tier2 || []), ...(tier3 || [])];
+  const allChanges = [...(tier2 || [])];
   if (allChanges.length > 0) {
     lines.push(`### ${new Date().toISOString().split('T')[0]}`);
     lines.push('');
@@ -253,8 +234,8 @@ function generateReviewDraft(analysis) {
 
 const analysis = readAnalysis();
 
-if (analysis.tier2.length === 0 && analysis.tier3.length === 0) {
-  console.log('No Tier 2 or Tier 3 changes detected. Nothing to review.');
+if (analysis.tier2.length === 0) {
+  console.log('No changes requiring human review detected. Nothing to review.');
   process.exit(0);
 }
 

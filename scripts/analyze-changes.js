@@ -1,14 +1,13 @@
 /**
- * Analyzes git diff and categorizes changes into three tiers.
+ * Analyzes git diff and categorizes changes into two tiers.
  *
  * Tier 1 (Devin Automatic): Changes to syntax, field/variable names, endpoint URLs,
  *   publicly available credentials — anything a user would copy and paste from the docs.
- * Tier 2 (Needs Review): Descriptions for release notes, documentation of brand new
- *   functionality, installation instructions, or anything similar.
- * Tier 3 (Human Only): Metrics changes, major dependency changes, major structural
- *   changes requiring customer-side updates, or changes to API types (e.g. SOAP to REST).
+ * Tier 2 (Human Review): Everything else — metrics changes, major dependency changes,
+ *   major structural changes, API type changes, new functionality, release notes,
+ *   installation instructions, comments, etc.
  *
- * Outputs JSON to stdout: { tier1: [...], tier2: [...], tier3: [...] }
+ * Outputs JSON to stdout: { tier1: [...], tier2: [...] }
  */
 
 const { execSync } = require('child_process');
@@ -24,13 +23,12 @@ function run(cmd) {
 function analyzeChanges() {
   const tier1 = [];
   const tier2 = [];
-  const tier3 = [];
 
   // Get list of changed files vs previous commit
   const nameStatus = run('git diff HEAD~1 --name-status');
   if (!nameStatus) {
     // No previous commit or no changes
-    return { tier1, tier2, tier3 };
+    return { tier1, tier2 };
   }
 
   const changedFiles = nameStatus.split('\n').filter(Boolean);
@@ -41,11 +39,11 @@ function analyzeChanges() {
     const file = parts[parts.length - 1];
     const oldFile = parts.length > 2 ? parts[1] : null;
 
-    // ── Tier 3: Dependency changes ──
+    // ── Dependency changes (Human Review) ──
     if (file === 'package.json' || file === 'package-lock.json') {
       const diff = run(`git diff HEAD~1 -- "${file}"`);
       if (diff.includes('"dependencies"') || diff.includes('"devDependencies"')) {
-        tier3.push({
+        tier2.push({
           type: 'dependency_change',
           file,
           description: `Dependencies changed in ${file}`,
@@ -91,14 +89,14 @@ function analyzeChanges() {
     // ── Modified file: analyze the diff ──
     if (status === 'M') {
       const diff = run(`git diff HEAD~1 -- "${file}"`);
-      analyzeDiff(file, diff, tier1, tier2, tier3);
+      analyzeDiff(file, diff, tier1, tier2);
     }
   }
 
-  return { tier1, tier2, tier3 };
+  return { tier1, tier2 };
 }
 
-function analyzeDiff(file, diff, tier1, tier2, tier3) {
+function analyzeDiff(file, diff, tier1, tier2) {
   const lines = diff.split('\n');
   const addedLines = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
   const removedLines = lines.filter((l) => l.startsWith('-') && !l.startsWith('---'));
@@ -213,7 +211,7 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
     });
   }
 
-  // ── Detect major structural changes requiring customer-side changes (Tier 3) ──
+  // ── Detect major structural changes (Human Review) ──
   const newImports = addedLines.filter(
     (l) => l.match(/^\+.*require\s*\(/) || l.match(/^\+.*import\s+/)
   );
@@ -221,33 +219,33 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
     (l) => l.match(/^-.*require\s*\(/) || l.match(/^-.*import\s+/)
   );
   if (newImports.length > 2 || removedImports.length > 2) {
-    tier3.push({
+    tier2.push({
       type: 'major_structural_change',
       file,
       description: `Major import/require changes in ${file} (${newImports.length} added, ${removedImports.length} removed) — may require customer-side updates`,
     });
   }
 
-  // ── Detect API type changes e.g. SOAP to REST (Tier 3) ──
+  // ── Detect API type changes e.g. SOAP to REST (Human Review) ──
   const apiTypePattern = /\b(soap|restful|rest(?:\s*api)?|graphql|grpc|websocket|xml-rpc|json-rpc)\b/i;
   const removedApiTypes = removedLines.filter((l) => apiTypePattern.test(l));
   const addedApiTypes = addedLines.filter((l) => apiTypePattern.test(l));
   if (removedApiTypes.length > 0 && addedApiTypes.length > 0) {
-    tier3.push({
+    tier2.push({
       type: 'api_type_change',
       file,
       description: `API type/protocol changes detected in ${file} (${removedApiTypes.length} removed, ${addedApiTypes.length} added)`,
     });
   }
 
-  // ── Detect metrics-related changes (Tier 3 — Human Only) ──
+  // ── Detect metrics-related changes (Human Review) ──
   const metricsPattern = /^\+.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i;
   const metricsLines = addedLines.filter((l) => metricsPattern.test(l));
   const removedMetricsLines = removedLines.filter((l) =>
     /^-.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i.test(l)
   );
   if (metricsLines.length > 0 || removedMetricsLines.length > 0) {
-    tier3.push({
+    tier2.push({
       type: 'metrics_change',
       file,
       description: `Metrics-related changes in ${file} (${metricsLines.length} added, ${removedMetricsLines.length} removed)`,
@@ -270,7 +268,7 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
   }
 
   // ── Large changes without clear rename = Tier 2 ──
-  const alreadyCategorized = tier1.some((t) => t.file === file) || tier2.some((t) => t.file === file) || tier3.some((t) => t.file === file);
+  const alreadyCategorized = tier1.some((t) => t.file === file) || tier2.some((t) => t.file === file);
   if (!alreadyCategorized && addedLines.length > 20) {
     tier2.push({
       type: 'significant_change',

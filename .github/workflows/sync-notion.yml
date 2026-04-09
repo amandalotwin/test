@@ -18,7 +18,6 @@ jobs:
     outputs:
       has_tier1: ${{ steps.analyze.outputs.has_tier1 }}
       has_tier2: ${{ steps.analyze.outputs.has_tier2 }}
-      has_tier3: ${{ steps.analyze.outputs.has_tier3 }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,15 +37,12 @@ jobs:
 
           TIER1_COUNT=$(echo "$ANALYSIS" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf-8');const a=JSON.parse(d);console.log(a.tier1.length)")
           TIER2_COUNT=$(echo "$ANALYSIS" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf-8');const a=JSON.parse(d);console.log(a.tier2.length)")
-          TIER3_COUNT=$(echo "$ANALYSIS" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf-8');const a=JSON.parse(d);console.log(a.tier3.length)")
 
-          echo "Tier 1 changes: $TIER1_COUNT"
-          echo "Tier 2 changes: $TIER2_COUNT"
-          echo "Tier 3 changes: $TIER3_COUNT"
+          echo "Devin Automatic changes: $TIER1_COUNT"
+          echo "Human Review changes: $TIER2_COUNT"
 
           echo "has_tier1=$( [ "$TIER1_COUNT" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
           echo "has_tier2=$( [ "$TIER2_COUNT" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
-          echo "has_tier3=$( [ "$TIER3_COUNT" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
 
       - name: Upload analysis
         uses: actions/upload-artifact@v4
@@ -54,7 +50,7 @@ jobs:
           name: analysis
           path: /tmp/analysis.json
 
-  # ── Tier 1: Auto-update Notion directly ──
+  # ── Devin Automatic: Auto-update Notion directly ──
   auto-sync:
     needs: analyze
     if: needs.analyze.outputs.has_tier1 == 'true' && github.event_name != 'workflow_dispatch'
@@ -71,13 +67,13 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
         run: |
-          echo "Tier 1 changes detected — auto-updating Notion page..."
+          echo "Devin Automatic changes detected — auto-updating Notion page..."
           node scripts/sync-notion.js
 
-  # ── Tier 2: Create a review PR with proposed documentation ──
+  # ── Human Review: Create a review PR with proposed documentation ──
   review-pr:
     needs: analyze
-    if: (needs.analyze.outputs.has_tier2 == 'true' || needs.analyze.outputs.has_tier3 == 'true') && github.event_name != 'workflow_dispatch'
+    if: needs.analyze.outputs.has_tier2 == 'true' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -111,58 +107,18 @@ jobs:
           title: 'docs: Notion documentation update needs review'
           body: |
             This PR was auto-generated because code changes were detected that need
-            documentation review before updating the Notion design spec page.
+            human review before updating the Notion design spec page.
 
             **Please review `docs/proposed-notion-updates.md` for details.**
 
-            ### Update Tiers Detected
-            - Tier 2 (Needs Review — release notes, new functionality docs, install instructions): ${{ needs.analyze.outputs.has_tier2 }}
-            - Tier 3 (Human Only — metrics, major dependencies, structural/API type changes): ${{ needs.analyze.outputs.has_tier3 }}
+            This includes changes related to: metrics, dependencies, new functionality,
+            structural changes, API type changes, release notes, and more.
 
-            Once you merge this PR, update the Notion page manually for any
-            Tier 2/3 items, or trigger a full sync via workflow_dispatch.
+            Once you merge this PR, update the Notion page manually or trigger
+            a full sync via workflow_dispatch.
           branch: docs/notion-review
           delete-branch: true
           labels: documentation,needs-review
-
-  # ── Tier 3: Create a GitHub issue for human-only changes ──
-  human-flag:
-    needs: analyze
-    if: needs.analyze.outputs.has_tier3 == 'true' && github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Download analysis
-        uses: actions/download-artifact@v4
-        with:
-          name: analysis
-          path: /tmp
-
-      - name: Create issue for human review
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const analysis = JSON.parse(fs.readFileSync('/tmp/analysis.json', 'utf-8'));
-
-            const tier3Items = analysis.tier3.map(c => `- **${c.type}**: ${c.description}`).join('\n');
-
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Notion doc update: human review needed (${new Date().toISOString().split('T')[0]})`,
-              body: `## Human Review Required\n\nThe following changes were detected that require human judgment to document.\nThese should NOT be auto-generated — a human must update the Notion design spec page.\n\n${tier3Items}\n\n### What to do\n1. Review the changes listed above\n2. Manually update the Notion design spec page for any items related to:\n   - Metrics changes\n   - Major dependency changes\n   - Major structural changes requiring customer-side updates\n   - Changes to API types (e.g. SOAP to REST)\n3. Close this issue once the Notion page is updated\n\n_Auto-generated by the Notion sync workflow._`,
-              labels: ['documentation', 'human-only']
-            });
 
   # ── Fallback: Full sync on manual trigger ──
   full-sync:
