@@ -92,6 +92,13 @@ function generateReviewDraft_nyc(analysis_nyc) {
     const newFunctions_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_function');
     const commentChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'comments_changed');
     const significantChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'significant_change');
+    const flaggedChanges_nyc = tier2_nyc.filter(
+      (c_nyc) =>
+        c_nyc.type === 'dependency_change' ||
+        c_nyc.type === 'major_structural_change' ||
+        c_nyc.type === 'api_type_change' ||
+        c_nyc.type === 'metrics_change'
+    );
 
     if (newFiles_nyc.length > 0) {
       lines_nyc.push('### New Files');
@@ -204,6 +211,25 @@ function generateReviewDraft_nyc(analysis_nyc) {
         lines_nyc.push(
           `- \`${change_nyc.file_nyc}\` (+${change_nyc.linesAdded_nyc}/-${change_nyc.linesRemoved_nyc} lines)`
         );
+      }
+      lines_nyc.push('');
+    }
+
+    if (flaggedChanges_nyc.length > 0) {
+      lines_nyc.push('### Flagged for Review');
+      lines_nyc.push('');
+      lines_nyc.push('The following changes require careful human review before documentation is updated:');
+      lines_nyc.push('');
+      for (const change_nyc of flaggedChanges_nyc) {
+        const label_nyc =
+          change_nyc.type === 'dependency_change'
+            ? '**Dependency Change**'
+            : change_nyc.type === 'major_structural_change'
+              ? '**Major Structural Change**'
+              : change_nyc.type === 'api_type_change'
+                ? '**API Type Change**'
+                : '**Metrics Change**';
+        lines_nyc.push(`- ${label_nyc}: ${change_nyc.description}`);
       }
       lines_nyc.push('');
     }
