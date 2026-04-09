@@ -387,7 +387,7 @@ function buildPageBlocks() {
         '    "partySize": 8\n' +
         '  },\n' +
         '  "metrics": {\n' +
-        '    "largeParty": true\n' +
+        '    "large_party_dinner": true\n' +
         '  }\n' +
         '}',
       'json'
@@ -396,7 +396,7 @@ function buildPageBlocks() {
       richText('The '),
       richText('metrics', { code: true }),
       richText(' object is included on all successful responses. '),
-      richText('largeParty', { code: true }),
+      richText('large_party_dinner', { code: true }),
       richText(' is set to '),
       richText('true', { code: true }),
       richText(' when the party size exceeds 6 guests.'),

@@ -33,7 +33,7 @@ async function handleReservationRequest(text) {
 
   const metrics = {};
   if (partySize > largePartyThreshold) {
-    metrics.largeParty = true;
+    metrics.large_party_dinner = true;
   }
 
   return {
