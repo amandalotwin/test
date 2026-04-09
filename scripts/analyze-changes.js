@@ -205,7 +205,7 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
   const removedCreds = removedLines.filter((l) => credentialPattern.test(l));
   const addedCreds = addedLines.filter((l) => credentialPattern.test(l));
   if ((removedCreds.length > 0 || addedCreds.length > 0) &&
-      !(removedCreds.length === addedCreds.length && removedCreds.every((l, i) => addedCreds[i] === l))) {
+      !(removedCreds.length === addedCreds.length && removedCreds.every((l, i) => addedCreds[i]?.substring(1) === l.substring(1)))) {
     tier1.push({
       type: 'credential_config_changed',
       file,
