@@ -3,7 +3,7 @@
  *
  * Tier 1 (Devin Automatic): Renames, field/param changes, constant updates
  * Tier 2 (Needs Review): New functionality, description changes, release notes
- * Tier 3 (Human Only): Dependency changes, major API/structural changes
+ * Tier 3 (Human Only): Dependency changes, major API/structural changes, metrics changes
  *
  * Outputs JSON to stdout: { tier1: [...], tier2: [...], tier3: [...] }
  */
@@ -189,6 +189,20 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
       type: 'major_structural_change',
       file,
       description: `Major import/require changes in ${file} (${newImports.length} added, ${removedImports.length} removed)`,
+    });
+  }
+
+  // ── Detect metrics-related changes (Tier 3 — Human Only) ──
+  const metricsPattern = /^\+.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i;
+  const metricsLines = addedLines.filter((l) => metricsPattern.test(l));
+  const removedMetricsLines = removedLines.filter((l) =>
+    /^-.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i.test(l)
+  );
+  if (metricsLines.length > 0 || removedMetricsLines.length > 0) {
+    tier3.push({
+      type: 'metrics_change',
+      file,
+      description: `Metrics-related changes in ${file} (${metricsLines.length} added, ${removedMetricsLines.length} removed)`,
     });
   }
 
