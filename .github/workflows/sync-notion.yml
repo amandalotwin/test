@@ -38,8 +38,8 @@ jobs:
           echo "Analysis result:"
           echo "$ANALYSIS" | head -100
 
-          TIER1_COUNT=$(echo "$ANALYSIS" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf-8');const a=JSON.parse(d);console.log(a.tier1.length)")
-          TIER2_COUNT=$(echo "$ANALYSIS" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf-8');const a=JSON.parse(d);console.log(a.tier2.length)")
+          TIER1_COUNT=$(echo "$ANALYSIS" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf-8');const a=JSON.parse(d);console.log(a.tier1_nyc.length)")
+          TIER2_COUNT=$(echo "$ANALYSIS" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf-8');const a=JSON.parse(d);console.log(a.tier2_nyc.length)")
 
           echo "Devin Automatic changes: $TIER1_COUNT"
           echo "Human Review changes: $TIER2_COUNT"
@@ -103,7 +103,7 @@ jobs:
           CHANGES=$(cat /tmp/analysis.json | node -e "
             const d=require('fs').readFileSync('/dev/stdin','utf-8');
             const a=JSON.parse(d);
-            const lines=a.tier2.map(c => '- **' + c.type + '**: ' + c.description);
+            const lines=a.tier2_nyc.map(c => '- **' + c.type + '**: ' + c.description);
             console.log(lines.join('\n'));
           ")
           COMMIT_SHA="${{ github.sha }}"
