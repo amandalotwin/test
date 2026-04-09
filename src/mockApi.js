@@ -1,4 +1,4 @@
-const CAPACITY = 20;
+const capacity = 20;
 
 let bookings = {};
 
@@ -11,7 +11,7 @@ let bookings = {};
 async function checkAvailability({ date, time, partySize }) {
   const key = `${date}_${time}`;
   const currentCount = bookings[key] || 0;
-  const available = currentCount + partySize <= CAPACITY;
+  const available = currentCount + partySize <= capacity;
   return { available };
 }
 
@@ -31,8 +31,8 @@ async function makeReservation({ date, time, partySize }) {
 /**
  * Resets the bookings store. Used by tests to clear state between runs.
  */
-function _resetBookings() {
+function resetBookings() {
   bookings = {};
 }
 
-module.exports = { checkAvailability, makeReservation, _resetBookings };
+module.exports = { checkAvailability, makeReservation, resetBookings };

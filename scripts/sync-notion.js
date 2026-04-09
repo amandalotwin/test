@@ -192,7 +192,7 @@ function buildPageBlocks() {
   const indexSrc = readSource('index.js');
 
   // Extract capacity from mockApi.js
-  const capacityMatch = mockApiSrc.match(/const CAPACITY = (\d+)/);
+  const capacityMatch = mockApiSrc.match(/const capacity = (\d+)/);
   const capacity = capacityMatch ? capacityMatch[1] : '20';
 
   const blocks = [
@@ -353,10 +353,10 @@ function buildPageBlocks() {
       'javascript'
     ),
 
-    heading2('_resetBookings()'),
+    heading2('resetBookings()'),
     paragraph('Resets the in-memory booking store. Intended for testing use only.'),
     codeBlock(
-      'const { _resetBookings } = require(\'./mockApi\');\n_resetBookings(); // clears all bookings',
+      'const { resetBookings } = require(\'./mockApi\');\nresetBookings(); // clears all bookings',
       'javascript'
     ),
 
@@ -529,7 +529,7 @@ function buildPageBlocks() {
       ]
     ),
     paragraph(
-      'To change the capacity, update the CAPACITY constant in mockApi.js, or move it to a config file / environment variable for production use.'
+      'To change the capacity, update the capacity constant in mockApi.js, or move it to a config file / environment variable for production use.'
     ),
     divider(),
 
@@ -556,8 +556,8 @@ function buildPageBlocks() {
     bulletItem([richText('[Tier 3] ', { bold: true }), richText('Evaluated migration from in-memory store to SQLite — deferred to v2.0')]),
 
     heading3('v1.2.0 — 2026-03-28'),
-    bulletItem([richText('[Tier 1] ', { bold: true }), richText('CAPACITY constant updated from 15 → 20 guests per slot')]),
-    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Added '), richText('_resetBookings()', { code: true }), richText(' helper for test isolation')]),
+    bulletItem([richText('[Tier 1] ', { bold: true }), richText('capacity constant updated from 15 → 20 guests per slot')]),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Added '), richText('resetBookings()', { code: true }), richText(' helper for test isolation')]),
     bulletItem([richText('[Tier 1] ', { bold: true }), richText('Fixed 24-hour time parsing fallback for ambiguous formats like 6:30')]),
 
     heading3('v1.1.0 — 2026-03-20'),
