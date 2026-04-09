@@ -77,7 +77,7 @@ jobs:
   # ── Tier 2: Create a review PR with proposed documentation ──
   review-pr:
     needs: analyze
-    if: needs.analyze.outputs.has_tier2 == 'true' || needs.analyze.outputs.has_tier3 == 'true'
+    if: (needs.analyze.outputs.has_tier2 == 'true' || needs.analyze.outputs.has_tier3 == 'true') && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -128,7 +128,7 @@ jobs:
   # ── Tier 3: Create a GitHub issue for human-only changes ──
   human-flag:
     needs: analyze
-    if: needs.analyze.outputs.has_tier3 == 'true'
+    if: needs.analyze.outputs.has_tier3 == 'true' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       issues: write

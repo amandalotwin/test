@@ -208,7 +208,7 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
   }
 
   // ── Large changes without clear rename = Tier 2 ──
-  const alreadyCategorized = tier1.some((t) => t.file === file) || tier2.some((t) => t.file === file);
+  const alreadyCategorized = tier1.some((t) => t.file === file) || tier2.some((t) => t.file === file) || tier3.some((t) => t.file === file);
   if (!alreadyCategorized && addedLines.length > 20) {
     tier2.push({
       type: 'significant_change',
