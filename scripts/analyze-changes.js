@@ -227,8 +227,8 @@ function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
   }
 
   // ── Detect API type changes e.g. SOAP to REST (Human Review) ──
-  // Omit trailing \b so suffixed names (e.g. rest_nyc, graphql_nyc) still match
-  const apiTypePattern_nyc = /\b(soap|restful|rest(?:\s*api)?|graphql|grpc|websocket|xml-rpc|json-rpc)/i;
+  // Use (?=\b|_) lookahead so suffixed names (e.g. rest_nyc) match but prefixed words (e.g. restore) don't
+  const apiTypePattern_nyc = /\b(soap|restful|rest(?:\s*api)?|graphql|grpc|websocket|xml-rpc|json-rpc)(?=\b|_)/i;
   const removedApiTypes_nyc = removedLines_nyc.filter((l_nyc) => apiTypePattern_nyc.test(l_nyc));
   const addedApiTypes_nyc = addedLines_nyc.filter((l_nyc) => apiTypePattern_nyc.test(l_nyc));
   if (removedApiTypes_nyc.length > 0 && addedApiTypes_nyc.length > 0) {
@@ -240,11 +240,11 @@ function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
   }
 
   // ── Detect metrics-related changes (Human Review) ──
-  // Use \b only at the start of keywords; omit trailing \b so suffixed names (e.g. metrics_nyc) still match
-  const metricsPattern_nyc = /^\+.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)/i;
+  // Use (?=\b|_) lookahead so suffixed names (e.g. metrics_nyc) match but prefixed words (e.g. targetElement) don't
+  const metricsPattern_nyc = /^\+.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)(?=\b|_)/i;
   const metricsLines_nyc = addedLines_nyc.filter((l_nyc) => metricsPattern_nyc.test(l_nyc));
   const removedMetricsLines_nyc = removedLines_nyc.filter((l_nyc) =>
-    /^-.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)/i.test(l_nyc)
+    /^-.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)(?=\b|_)/i.test(l_nyc)
   );
   if (metricsLines_nyc.length > 0 || removedMetricsLines_nyc.length > 0) {
     tier2_nyc.push({

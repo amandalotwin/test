@@ -218,9 +218,17 @@ function extractNames_nyc(parseRequestSrc_nyc, mockApiSrc_nyc, handleReservation
   const constMatches_nyc = Array.from(handleReservationSrc_nyc.matchAll(/const\s+(\w+)\s*=\s*(\d+)\s*;/g));
   let largePartyThreshold_nyc = '6';
   let lateNightHour_nyc = '21';
+  let happyHourStart_nyc = '17';
+  let happyHourEnd_nyc = '19';
+  let brunchStart_nyc = '10';
+  let brunchEnd_nyc = '13';
   for (const m_nyc of constMatches_nyc) {
     if (/party|threshold/i.test(m_nyc[1])) largePartyThreshold_nyc = m_nyc[2];
-    else if (/night|hour/i.test(m_nyc[1])) lateNightHour_nyc = m_nyc[2];
+    else if (/lateNight|late.*night/i.test(m_nyc[1])) lateNightHour_nyc = m_nyc[2];
+    else if (/happyHourStart|happy.*hour.*start/i.test(m_nyc[1])) happyHourStart_nyc = m_nyc[2];
+    else if (/happyHourEnd|happy.*hour.*end/i.test(m_nyc[1])) happyHourEnd_nyc = m_nyc[2];
+    else if (/brunchStart/i.test(m_nyc[1])) brunchStart_nyc = m_nyc[2];
+    else if (/brunchEnd/i.test(m_nyc[1])) brunchEnd_nyc = m_nyc[2];
   }
 
   // Extract response field names from the success return in handleReservation
@@ -288,9 +296,12 @@ function extractNames_nyc(parseRequestSrc_nyc, mockApiSrc_nyc, handleReservation
   }
 
   // Extract metric field names from: metrics_nyc.FIELD = true
-  const metricMatches_nyc = Array.from(handleReservationSrc_nyc.matchAll(/\w+\.(\w+)\s*=\s*true/g));
-  const largePartyMetric_nyc = metricMatches_nyc[0] ? metricMatches_nyc[0][1] : 'largeParty';
-  const lateNightMetric_nyc = metricMatches_nyc[1] ? metricMatches_nyc[1][1] : 'lateNight';
+  // Use pattern-based matching instead of positional indexing to avoid shifts when new metrics are added
+  const metricMatches_nyc = Array.from(handleReservationSrc_nyc.matchAll(/\w+\.(\w+)\s*=\s*true/g)).map(function(m_nyc) { return m_nyc[1]; });
+  const largePartyMetric_nyc = metricMatches_nyc.find(function(m_nyc) { return /large.*party/i.test(m_nyc); }) || 'largeParty';
+  const happyHourMetric_nyc = metricMatches_nyc.find(function(m_nyc) { return /happy.*hour/i.test(m_nyc); }) || 'happyHour';
+  const brunchMetric_nyc = metricMatches_nyc.find(function(m_nyc) { return /brunch/i.test(m_nyc); }) || 'brunch';
+  const lateNightMetric_nyc = metricMatches_nyc.find(function(m_nyc) { return /late.*night/i.test(m_nyc); }) || 'lateNight';
 
   // Extract available field from first function return in mockApi
   const availReturnMatch_nyc = mockApiSrc_nyc.match(/return\s*\{\s*(\w+)\s*\}/);
@@ -312,12 +323,18 @@ function extractNames_nyc(parseRequestSrc_nyc, mockApiSrc_nyc, handleReservation
     capacityVal: capacityVal_nyc,
     largePartyThreshold: largePartyThreshold_nyc,
     lateNightHour: lateNightHour_nyc,
+    happyHourStart: happyHourStart_nyc,
+    happyHourEnd: happyHourEnd_nyc,
+    brunchStart: brunchStart_nyc,
+    brunchEnd: brunchEnd_nyc,
     successField: successField_nyc,
     messageField: messageField_nyc,
     confirmationField: confirmationField_nyc,
     detailsField: detailsField_nyc,
     metricsField: metricsField_nyc,
     largePartyMetric: largePartyMetric_nyc,
+    happyHourMetric: happyHourMetric_nyc,
+    brunchMetric: brunchMetric_nyc,
     lateNightMetric: lateNightMetric_nyc,
     availableField: availableField_nyc,
     confirmField: confirmField_nyc,
@@ -535,11 +552,31 @@ function buildPageBlocks_nyc() {
     paragraph_nyc([
       richText_nyc('The '),
       richText_nyc(n_nyc.metricsField, { code: true }),
-      richText_nyc(' object is included on all successful responses. '),
+      richText_nyc(' object is included on all successful responses. Available metrics:'),
+    ]),
+    bulletItem_nyc([
       richText_nyc(n_nyc.largePartyMetric, { code: true }),
-      richText_nyc(' is set to '),
+      richText_nyc(': set to '),
       richText_nyc('true', { code: true }),
       richText_nyc(` when the party size exceeds ${n_nyc.largePartyThreshold} guests.`),
+    ]),
+    bulletItem_nyc([
+      richText_nyc(n_nyc.happyHourMetric, { code: true }),
+      richText_nyc(': set to '),
+      richText_nyc('true', { code: true }),
+      richText_nyc(` for reservations between ${n_nyc.happyHourStart > 12 ? n_nyc.happyHourStart - 12 : n_nyc.happyHourStart}\u2013${n_nyc.happyHourEnd > 12 ? n_nyc.happyHourEnd - 12 : n_nyc.happyHourEnd}pm.`),
+    ]),
+    bulletItem_nyc([
+      richText_nyc(n_nyc.brunchMetric, { code: true }),
+      richText_nyc(': set to '),
+      richText_nyc('true', { code: true }),
+      richText_nyc(` for reservations between ${n_nyc.brunchStart}am\u2013${n_nyc.brunchEnd > 12 ? n_nyc.brunchEnd - 12 : n_nyc.brunchEnd}pm.`),
+    ]),
+    bulletItem_nyc([
+      richText_nyc(n_nyc.lateNightMetric, { code: true }),
+      richText_nyc(': set to '),
+      richText_nyc('true', { code: true }),
+      richText_nyc(` when the reservation hour is ${n_nyc.lateNightHour}:00 or later.`),
     ]),
 
     heading3_nyc('Parsing Failure (missing date, time, or party size)'),
