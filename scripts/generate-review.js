@@ -1,5 +1,5 @@
 /**
- * Generates a proposed Notion documentation update for Tier 2 changes.
+ * Generates a proposed Notion documentation update for Human Review changes.
  *
  * Reads the analysis JSON from stdin or a file argument, produces a markdown
  * draft at docs/proposed-notion-updates.md describing what documentation
@@ -10,262 +10,269 @@
  *   node scripts/generate-review.js analysis.json
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs_nyc = require('fs');
+const path_nyc = require('path');
 
-function readAnalysis() {
+function readAnalysis_nyc() {
   // Read from file argument or stdin
   if (process.argv[2]) {
-    return JSON.parse(fs.readFileSync(process.argv[2], 'utf-8'));
+    return JSON.parse(fs_nyc.readFileSync(process.argv[2], 'utf-8'));
   }
-  return JSON.parse(fs.readFileSync('/dev/stdin', 'utf-8'));
+  return JSON.parse(fs_nyc.readFileSync('/dev/stdin', 'utf-8'));
 }
 
-function generateSourceSnippet(file, functionName) {
-  const filePath = path.resolve(__dirname, '..', file);
-  if (!fs.existsSync(filePath)) return null;
+function generateSourceSnippet_nyc(file_nyc, functionName_nyc) {
+  const filePath_nyc = path_nyc.resolve(__dirname, '..', file_nyc);
+  if (!fs_nyc.existsSync(filePath_nyc)) return null;
 
-  const src = fs.readFileSync(filePath, 'utf-8');
+  const src_nyc = fs_nyc.readFileSync(filePath_nyc, 'utf-8');
 
-  if (!functionName) return null;
+  if (!functionName_nyc) return null;
 
   // Extract the function body (simple heuristic)
-  const fnRegex = new RegExp(
-    `(?:async\\s+)?function\\s+${functionName}\\s*\\([^)]*\\)\\s*\\{`,
+  const fnRegex_nyc = new RegExp(
+    `(?:async\\s+)?function\\s+${functionName_nyc}\\s*\\([^)]*\\)\\s*\\{`,
     'm'
   );
-  const match = src.match(fnRegex);
-  if (!match) return null;
+  const match_nyc = src_nyc.match(fnRegex_nyc);
+  if (!match_nyc) return null;
 
-  const startIdx = match.index;
-  let braceCount = 0;
-  let endIdx = startIdx;
-  let started = false;
+  const startIdx_nyc = match_nyc.index;
+  let braceCount_nyc = 0;
+  let endIdx_nyc = startIdx_nyc;
+  let started_nyc = false;
 
-  for (let i = startIdx; i < src.length; i++) {
-    if (src[i] === '{') {
-      braceCount++;
-      started = true;
-    } else if (src[i] === '}') {
-      braceCount--;
+  for (let i_nyc = startIdx_nyc; i_nyc < src_nyc.length; i_nyc++) {
+    if (src_nyc[i_nyc] === '{') {
+      braceCount_nyc++;
+      started_nyc = true;
+    } else if (src_nyc[i_nyc] === '}') {
+      braceCount_nyc--;
     }
-    if (started && braceCount === 0) {
-      endIdx = i + 1;
+    if (started_nyc && braceCount_nyc === 0) {
+      endIdx_nyc = i_nyc + 1;
       break;
     }
   }
 
-  return src.slice(startIdx, endIdx);
+  return src_nyc.slice(startIdx_nyc, endIdx_nyc);
 }
 
-function extractFunctionSignature(file, functionName) {
-  const filePath = path.resolve(__dirname, '..', file);
-  if (!fs.existsSync(filePath)) return null;
+function extractFunctionSignature_nyc(file_nyc, functionName_nyc) {
+  const filePath_nyc = path_nyc.resolve(__dirname, '..', file_nyc);
+  if (!fs_nyc.existsSync(filePath_nyc)) return null;
 
-  const src = fs.readFileSync(filePath, 'utf-8');
-  const fnRegex = new RegExp(
-    `(?:async\\s+)?function\\s+${functionName}\\s*\\([^)]*\\)`,
+  const src_nyc = fs_nyc.readFileSync(filePath_nyc, 'utf-8');
+  const fnRegex_nyc = new RegExp(
+    `(?:async\\s+)?function\\s+${functionName_nyc}\\s*\\([^)]*\\)`,
     'm'
   );
-  const match = src.match(fnRegex);
-  return match ? match[0] : null;
+  const match_nyc = src_nyc.match(fnRegex_nyc);
+  return match_nyc ? match_nyc[0] : null;
 }
 
-function generateReviewDraft(analysis) {
-  const { tier2, tier3 } = analysis;
-  const lines = [];
+function generateReviewDraft_nyc(analysis_nyc) {
+  const { tier2_nyc } = analysis_nyc;
+  const lines_nyc = [];
 
-  lines.push('# Proposed Notion Documentation Update');
-  lines.push('');
-  lines.push(`> Auto-generated on ${new Date().toISOString().split('T')[0]}`);
-  lines.push('> Review this draft and merge the PR to approve these documentation changes.');
-  lines.push('');
+  lines_nyc.push('# Proposed Notion Documentation Update');
+  lines_nyc.push('');
+  lines_nyc.push(`> Auto-generated on ${new Date().toISOString().split('T')[0]}`);
+  lines_nyc.push('> Review this draft and merge the PR to approve these documentation changes.');
+  lines_nyc.push('');
 
-  // ── Tier 2: Changes needing review ──
-  if (tier2.length > 0) {
-    lines.push('## Changes Requiring Review');
-    lines.push('');
+  // ── Changes needing human review ──
+  if (tier2_nyc.length > 0) {
+    lines_nyc.push('## Changes Requiring Review');
+    lines_nyc.push('');
 
     // Group by type
-    const newFiles = tier2.filter((c) => c.type === 'new_file');
-    const deletedFiles = tier2.filter((c) => c.type === 'deleted_file');
-    const newFunctions = tier2.filter((c) => c.type === 'new_function');
-    const commentChanges = tier2.filter((c) => c.type === 'comments_changed');
-    const significantChanges = tier2.filter((c) => c.type === 'significant_change');
+    const newFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_file');
+    const deletedFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'deleted_file');
+    const newFunctions_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_function');
+    const commentChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'comments_changed');
+    const significantChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'significant_change');
+    const flaggedChanges_nyc = tier2_nyc.filter(
+      (c_nyc) =>
+        c_nyc.type === 'dependency_change' ||
+        c_nyc.type === 'major_structural_change' ||
+        c_nyc.type === 'api_type_change' ||
+        c_nyc.type === 'metrics_change'
+    );
 
-    if (newFiles.length > 0) {
-      lines.push('### New Files');
-      lines.push('');
-      lines.push('The following new files were added and need documentation:');
-      lines.push('');
-      for (const change of newFiles) {
-        lines.push(`#### \`${change.file}\``);
-        lines.push('');
+    if (newFiles_nyc.length > 0) {
+      lines_nyc.push('### New Files');
+      lines_nyc.push('');
+      lines_nyc.push('The following new files were added and need documentation:');
+      lines_nyc.push('');
+      for (const change_nyc of newFiles_nyc) {
+        lines_nyc.push(`#### \`${change_nyc.file_nyc}\``);
+        lines_nyc.push('');
 
         // Try to read the file and extract exports
-        const filePath = path.resolve(__dirname, '..', change.file);
-        if (fs.existsSync(filePath)) {
-          const src = fs.readFileSync(filePath, 'utf-8');
+        const filePath_nyc = path_nyc.resolve(__dirname, '..', change_nyc.file_nyc);
+        if (fs_nyc.existsSync(filePath_nyc)) {
+          const src_nyc = fs_nyc.readFileSync(filePath_nyc, 'utf-8');
 
           // Extract module.exports
-          const exportsMatch = src.match(/module\.exports\s*=\s*\{([^}]+)\}/);
-          if (exportsMatch) {
-            const exports = exportsMatch[1]
+          const exportsMatch_nyc = src_nyc.match(/module\.exports\s*=\s*\{([^}]+)\}/);
+          if (exportsMatch_nyc) {
+            const exports_nyc = exportsMatch_nyc[1]
               .split(',')
-              .map((e) => e.trim())
+              .map((e_nyc) => e_nyc.trim())
               .filter(Boolean);
-            lines.push('**Exported functions:**');
-            for (const exp of exports) {
-              const sig = extractFunctionSignature(change.file, exp);
-              lines.push(`- \`${sig || exp}\``);
+            lines_nyc.push('**Exported functions:**');
+            for (const exp_nyc of exports_nyc) {
+              const sig_nyc = extractFunctionSignature_nyc(change_nyc.file_nyc, exp_nyc);
+              lines_nyc.push(`- \`${sig_nyc || exp_nyc}\``);
             }
-            lines.push('');
+            lines_nyc.push('');
           }
 
-          lines.push('<details>');
-          lines.push('<summary>Source code</summary>');
-          lines.push('');
-          lines.push('```javascript');
-          lines.push(src);
-          lines.push('```');
-          lines.push('');
-          lines.push('</details>');
-          lines.push('');
+          lines_nyc.push('<details>');
+          lines_nyc.push('<summary>Source code</summary>');
+          lines_nyc.push('');
+          lines_nyc.push('```javascript');
+          lines_nyc.push(src_nyc);
+          lines_nyc.push('```');
+          lines_nyc.push('');
+          lines_nyc.push('</details>');
+          lines_nyc.push('');
         }
 
-        lines.push('**TODO:** Add a new section to the Notion page documenting this module, including:');
-        lines.push('- Purpose and description');
-        lines.push('- Function signatures, parameters, and return types');
-        lines.push('- Usage examples');
-        lines.push('');
+        lines_nyc.push('**TODO:** Add a new section to the Notion page documenting this module, including:');
+        lines_nyc.push('- Purpose and description');
+        lines_nyc.push('- Function signatures, parameters, and return types');
+        lines_nyc.push('- Usage examples');
+        lines_nyc.push('');
       }
     }
 
-    if (deletedFiles.length > 0) {
-      lines.push('### Deleted Files');
-      lines.push('');
-      lines.push('The following files were removed. Their documentation sections should be removed or archived:');
-      lines.push('');
-      for (const change of deletedFiles) {
-        lines.push(`- \`${change.file}\``);
+    if (deletedFiles_nyc.length > 0) {
+      lines_nyc.push('### Deleted Files');
+      lines_nyc.push('');
+      lines_nyc.push('The following files were removed. Their documentation sections should be removed or archived:');
+      lines_nyc.push('');
+      for (const change_nyc of deletedFiles_nyc) {
+        lines_nyc.push(`- \`${change_nyc.file_nyc}\``);
       }
-      lines.push('');
+      lines_nyc.push('');
     }
 
-    if (newFunctions.length > 0) {
-      lines.push('### New Functions');
-      lines.push('');
-      lines.push('The following new functions were added and need documentation:');
-      lines.push('');
-      for (const change of newFunctions) {
-        const sig = extractFunctionSignature(change.file, change.name);
-        lines.push(`#### \`${sig || change.name}\` in \`${change.file}\``);
-        lines.push('');
+    if (newFunctions_nyc.length > 0) {
+      lines_nyc.push('### New Functions');
+      lines_nyc.push('');
+      lines_nyc.push('The following new functions were added and need documentation:');
+      lines_nyc.push('');
+      for (const change_nyc of newFunctions_nyc) {
+        const sig_nyc = extractFunctionSignature_nyc(change_nyc.file_nyc, change_nyc.name_nyc);
+        lines_nyc.push(`#### \`${sig_nyc || change_nyc.name_nyc}\` in \`${change_nyc.file_nyc}\``);
+        lines_nyc.push('');
 
-        const snippet = generateSourceSnippet(change.file, change.name);
-        if (snippet) {
-          lines.push('<details>');
-          lines.push('<summary>Source code</summary>');
-          lines.push('');
-          lines.push('```javascript');
-          lines.push(snippet);
-          lines.push('```');
-          lines.push('');
-          lines.push('</details>');
-          lines.push('');
+        const snippet_nyc = generateSourceSnippet_nyc(change_nyc.file_nyc, change_nyc.name_nyc);
+        if (snippet_nyc) {
+          lines_nyc.push('<details>');
+          lines_nyc.push('<summary>Source code</summary>');
+          lines_nyc.push('');
+          lines_nyc.push('```javascript');
+          lines_nyc.push(snippet_nyc);
+          lines_nyc.push('```');
+          lines_nyc.push('');
+          lines_nyc.push('</details>');
+          lines_nyc.push('');
         }
 
-        lines.push('**TODO:** Document this function including:');
-        lines.push('- Description of what it does');
-        lines.push('- Parameters table (name, type, description)');
-        lines.push('- Return type and shape');
-        lines.push('- Usage example');
-        lines.push('');
+        lines_nyc.push('**TODO:** Document this function including:');
+        lines_nyc.push('- Description of what it does');
+        lines_nyc.push('- Parameters table (name, type, description)');
+        lines_nyc.push('- Return type and shape');
+        lines_nyc.push('- Usage example');
+        lines_nyc.push('');
       }
     }
 
-    if (commentChanges.length > 0) {
-      lines.push('### Updated Comments');
-      lines.push('');
-      lines.push('Comments were updated in the following files. Review if Notion documentation descriptions need updating:');
-      lines.push('');
-      for (const change of commentChanges) {
-        lines.push(`- \`${change.file}\``);
+    if (commentChanges_nyc.length > 0) {
+      lines_nyc.push('### Updated Comments');
+      lines_nyc.push('');
+      lines_nyc.push('Comments were updated in the following files. Review if Notion documentation descriptions need updating:');
+      lines_nyc.push('');
+      for (const change_nyc of commentChanges_nyc) {
+        lines_nyc.push(`- \`${change_nyc.file_nyc}\``);
       }
-      lines.push('');
+      lines_nyc.push('');
     }
 
-    if (significantChanges.length > 0) {
-      lines.push('### Significant Code Changes');
-      lines.push('');
-      lines.push('The following files had significant changes that may need documentation updates:');
-      lines.push('');
-      for (const change of significantChanges) {
-        lines.push(
-          `- \`${change.file}\` (+${change.linesAdded}/-${change.linesRemoved} lines)`
+    if (significantChanges_nyc.length > 0) {
+      lines_nyc.push('### Significant Code Changes');
+      lines_nyc.push('');
+      lines_nyc.push('The following files had significant changes that may need documentation updates:');
+      lines_nyc.push('');
+      for (const change_nyc of significantChanges_nyc) {
+        lines_nyc.push(
+          `- \`${change_nyc.file_nyc}\` (+${change_nyc.linesAdded_nyc}/-${change_nyc.linesRemoved_nyc} lines)`
         );
       }
-      lines.push('');
+      lines_nyc.push('');
     }
-  }
 
-  // ── Tier 3: Human-only flags ──
-  if (tier3.length > 0) {
-    lines.push('## Flagged for Human Review (Tier 3)');
-    lines.push('');
-    lines.push(
-      'The following changes require human judgment and should NOT be auto-documented:'
-    );
-    lines.push('');
-    for (const change of tier3) {
-      lines.push(`- **${change.type}**: ${change.description}`);
+    if (flaggedChanges_nyc.length > 0) {
+      lines_nyc.push('### Flagged for Review');
+      lines_nyc.push('');
+      lines_nyc.push('The following changes require careful human review before documentation is updated:');
+      lines_nyc.push('');
+      for (const change_nyc of flaggedChanges_nyc) {
+        const label_nyc =
+          change_nyc.type === 'dependency_change'
+            ? '**Dependency Change**'
+            : change_nyc.type === 'major_structural_change'
+              ? '**Major Structural Change**'
+              : change_nyc.type === 'api_type_change'
+                ? '**API Type Change**'
+                : '**Metrics Change**';
+        lines_nyc.push(`- ${label_nyc}: ${change_nyc.description}`);
+      }
+      lines_nyc.push('');
     }
-    lines.push('');
-    lines.push(
-      '> These changes may affect customer-facing goals, metrics, or outcomes. ' +
-        'A human should review and manually update the Notion page for these items.'
-    );
-    lines.push('');
   }
 
   // ── Release Notes ──
-  lines.push('## Release Notes Draft');
-  lines.push('');
-  lines.push('**Suggested release notes entry for this push:**');
-  lines.push('');
+  lines_nyc.push('## Release Notes Draft');
+  lines_nyc.push('');
+  lines_nyc.push('**Suggested release notes entry for this push:**');
+  lines_nyc.push('');
 
-  const allChanges = [...(tier2 || []), ...(tier3 || [])];
-  if (allChanges.length > 0) {
-    lines.push(`### ${new Date().toISOString().split('T')[0]}`);
-    lines.push('');
-    for (const change of allChanges) {
-      lines.push(`- ${change.description}`);
+  const allChanges_nyc = [...(tier2_nyc || [])];
+  if (allChanges_nyc.length > 0) {
+    lines_nyc.push(`### ${new Date().toISOString().split('T')[0]}`);
+    lines_nyc.push('');
+    for (const change_nyc of allChanges_nyc) {
+      lines_nyc.push(`- ${change_nyc.description}`);
     }
   } else {
-    lines.push('_No significant changes to document._');
+    lines_nyc.push('_No significant changes to document._');
   }
-  lines.push('');
+  lines_nyc.push('');
 
-  return lines.join('\n');
+  return lines_nyc.join('\n');
 }
 
 // ── Main ──
 
-const analysis = readAnalysis();
+const analysis_nyc = readAnalysis_nyc();
 
-if (analysis.tier2.length === 0 && analysis.tier3.length === 0) {
-  console.log('No Tier 2 or Tier 3 changes detected. Nothing to review.');
+if (analysis_nyc.tier2_nyc.length === 0) {
+  console.log('No changes requiring human review detected. Nothing to review.');
   process.exit(0);
 }
 
-const draft = generateReviewDraft(analysis);
+const draft_nyc = generateReviewDraft_nyc(analysis_nyc);
 
 // Write to docs/proposed-notion-updates.md
-const docsDir = path.resolve(__dirname, '..', 'docs');
-if (!fs.existsSync(docsDir)) {
-  fs.mkdirSync(docsDir, { recursive: true });
+const docsDir_nyc = path_nyc.resolve(__dirname, '..', 'docs');
+if (!fs_nyc.existsSync(docsDir_nyc)) {
+  fs_nyc.mkdirSync(docsDir_nyc, { recursive: true });
 }
 
-const outputPath = path.join(docsDir, 'proposed-notion-updates.md');
-fs.writeFileSync(outputPath, draft, 'utf-8');
-console.log(`Review draft written to ${outputPath}`);
+const outputPath_nyc = path_nyc.join(docsDir_nyc, 'proposed-notion-updates.md');
+fs_nyc.writeFileSync(outputPath_nyc, draft_nyc, 'utf-8');
+console.log(`Review draft written to ${outputPath_nyc}`);
