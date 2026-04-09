@@ -1,18 +1,18 @@
 /**
  * Parses a natural language reservation request and extracts date, time, and party size.
  *
- * @param {string} TEXT_NYC - Natural language reservation request
- * @returns {{ DATE_NYC: string|null, TIME_NYC: string|null, PARTYSIZE_NYC: number|null }}
+ * @param {string} text_nyc - Natural language reservation request
+ * @returns {{ date_nyc: string|null, time_nyc: string|null, PARTY_SIZE_nyc: number|null }}
  */
-function PARSEREQUEST_NYC(TEXT_NYC) {
+function parse_request_nyc(text_nyc) {
   return {
-    DATE_NYC: PARSEDATE_NYC(TEXT_NYC),
-    TIME_NYC: PARSETIME_NYC(TEXT_NYC),
-    PARTYSIZE_NYC: PARSEPARTYSIZE_NYC(TEXT_NYC),
+    date_nyc: parse_date_nyc(text_nyc),
+    time_nyc: parse_time_nyc(text_nyc),
+    PARTY_SIZE_nyc: parse_party_size_nyc(text_nyc),
   };
 }
 
-const MONTHMAP_NYC = {
+const month_map_nyc = {
   january: 1, february: 2, march: 3, april: 4,
   may: 5, june: 6, july: 7, august: 8,
   september: 9, october: 10, november: 11, december: 12,
@@ -22,39 +22,39 @@ const MONTHMAP_NYC = {
  * Extracts and normalizes a date from text to YYYY-MM-DD format.
  * Supports: "March 15", "March 15th", "12/25", "2025-04-10"
  */
-function PARSEDATE_NYC(TEXT_NYC) {
+function parse_date_nyc(text_nyc) {
   // ISO format: YYYY-MM-DD
-  const ISOMATCH_NYC = TEXT_NYC.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (ISOMATCH_NYC) {
-    return ISOMATCH_NYC[0];
+  const iso_match_nyc = text_nyc.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso_match_nyc) {
+    return iso_match_nyc[0];
   }
 
   // Month name + day: "March 15" or "March 15th"
-  const MONTHNAMEPATTERN_NYC = new RegExp(
-    `(${Object.keys(MONTHMAP_NYC).join('|')})\\s+(\\d{1,2})(?:st|nd|rd|th)?`,
+  const month_name_pattern_nyc = new RegExp(
+    `(${Object.keys(month_map_nyc).join('|')})\\s+(\\d{1,2})(?:st|nd|rd|th)?`,
     'i'
   );
-  const MONTHNAMEMATCH_NYC = TEXT_NYC.match(MONTHNAMEPATTERN_NYC);
-  if (MONTHNAMEMATCH_NYC) {
-    const MONTHNUM_NYC = MONTHMAP_NYC[MONTHNAMEMATCH_NYC[1].toLowerCase()];
-    const DAY_NYC = parseInt(MONTHNAMEMATCH_NYC[2], 10);
-    const YEAR_NYC = INFERYEAR_NYC(MONTHNUM_NYC, DAY_NYC);
-    return FORMATDATE_NYC(YEAR_NYC, MONTHNUM_NYC, DAY_NYC);
+  const month_name_match_nyc = text_nyc.match(month_name_pattern_nyc);
+  if (month_name_match_nyc) {
+    const month_num_nyc = month_map_nyc[month_name_match_nyc[1].toLowerCase()];
+    const day_nyc = parseInt(month_name_match_nyc[2], 10);
+    const year_nyc = infer_year_nyc(month_num_nyc, day_nyc);
+    return format_date_nyc(year_nyc, month_num_nyc, day_nyc);
   }
 
   // Numeric format: MM/DD or MM/DD/YYYY
-  const NUMERICMATCH_NYC = TEXT_NYC.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
-  if (NUMERICMATCH_NYC) {
-    const MONTH_NYC = parseInt(NUMERICMATCH_NYC[1], 10);
-    const DAY_NYC = parseInt(NUMERICMATCH_NYC[2], 10);
-    let YEAR_NYC;
-    if (NUMERICMATCH_NYC[3]) {
-      YEAR_NYC = parseInt(NUMERICMATCH_NYC[3], 10);
-      if (YEAR_NYC < 100) YEAR_NYC += 2000;
+  const numeric_match_nyc = text_nyc.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if (numeric_match_nyc) {
+    const month_nyc = parseInt(numeric_match_nyc[1], 10);
+    const day_nyc = parseInt(numeric_match_nyc[2], 10);
+    let year_nyc;
+    if (numeric_match_nyc[3]) {
+      year_nyc = parseInt(numeric_match_nyc[3], 10);
+      if (year_nyc < 100) year_nyc += 2000;
     } else {
-      YEAR_NYC = INFERYEAR_NYC(MONTH_NYC, DAY_NYC);
+      year_nyc = infer_year_nyc(month_nyc, day_nyc);
     }
-    return FORMATDATE_NYC(YEAR_NYC, MONTH_NYC, DAY_NYC);
+    return format_date_nyc(year_nyc, month_nyc, day_nyc);
   }
 
   return null;
@@ -64,64 +64,64 @@ function PARSEDATE_NYC(TEXT_NYC) {
  * Infers the year for a month/day combo. Uses the current year,
  * or next year if the date has already passed.
  */
-function INFERYEAR_NYC(MONTH_NYC, DAY_NYC) {
-  const NOW_NYC = new Date();
-  const CURRENTYEAR_NYC = NOW_NYC.getFullYear();
-  const CANDIDATE_NYC = new Date(CURRENTYEAR_NYC, MONTH_NYC - 1, DAY_NYC);
-  if (CANDIDATE_NYC < NOW_NYC) {
-    return CURRENTYEAR_NYC + 1;
+function infer_year_nyc(month_nyc, day_nyc) {
+  const now_nyc = new Date();
+  const current_year_nyc = now_nyc.getFullYear();
+  const candidate_nyc = new Date(current_year_nyc, month_nyc - 1, day_nyc);
+  if (candidate_nyc < now_nyc) {
+    return current_year_nyc + 1;
   }
-  return CURRENTYEAR_NYC;
+  return current_year_nyc;
 }
 
-function FORMATDATE_NYC(YEAR_NYC, MONTH_NYC, DAY_NYC) {
-  const M_NYC = String(MONTH_NYC).padStart(2, '0');
-  const D_NYC = String(DAY_NYC).padStart(2, '0');
-  return `${YEAR_NYC}-${M_NYC}-${D_NYC}`;
+function format_date_nyc(year_nyc, month_nyc, day_nyc) {
+  const m_nyc = String(month_nyc).padStart(2, '0');
+  const d_nyc = String(day_nyc).padStart(2, '0');
+  return `${year_nyc}-${m_nyc}-${d_nyc}`;
 }
 
 /**
  * Extracts and normalizes a time from text to HH:MM (24-hour) format.
  * Supports: "7pm", "7:30 PM", "19:00"
  */
-function PARSETIME_NYC(TEXT_NYC) {
+function parse_time_nyc(text_nyc) {
   // 24-hour format: 19:00
-  const TIME24MATCH_NYC = TEXT_NYC.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b(?!\s*[ap]m)/i);
-  if (TIME24MATCH_NYC) {
-    const HOURS_NYC = parseInt(TIME24MATCH_NYC[1], 10);
-    const MINUTES_NYC = parseInt(TIME24MATCH_NYC[2], 10);
+  const time_24_match_nyc = text_nyc.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b(?!\s*[ap]m)/i);
+  if (time_24_match_nyc) {
+    const hours_nyc = parseInt(time_24_match_nyc[1], 10);
+    const minutes_nyc = parseInt(time_24_match_nyc[2], 10);
     // Only treat as 24-hour if hours >= 13 or the format is unambiguous
-    if (HOURS_NYC >= 13) {
-      return `${String(HOURS_NYC).padStart(2, '0')}:${String(MINUTES_NYC).padStart(2, '0')}`;
+    if (hours_nyc >= 13) {
+      return `${String(hours_nyc).padStart(2, '0')}:${String(minutes_nyc).padStart(2, '0')}`;
     }
   }
 
   // 12-hour format with minutes: "7:30 PM", "6:30PM"
-  const TIME12MINMATCH_NYC = TEXT_NYC.match(/\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i);
-  if (TIME12MINMATCH_NYC) {
-    let HOURS_NYC = parseInt(TIME12MINMATCH_NYC[1], 10);
-    const MINUTES_NYC = parseInt(TIME12MINMATCH_NYC[2], 10);
-    const PERIOD_NYC = TIME12MINMATCH_NYC[3].toLowerCase();
-    if (PERIOD_NYC === 'pm' && HOURS_NYC !== 12) HOURS_NYC += 12;
-    if (PERIOD_NYC === 'am' && HOURS_NYC === 12) HOURS_NYC = 0;
-    return `${String(HOURS_NYC).padStart(2, '0')}:${String(MINUTES_NYC).padStart(2, '0')}`;
+  const time12_min_match_nyc = text_nyc.match(/\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i);
+  if (time12_min_match_nyc) {
+    let hours_nyc = parseInt(time12_min_match_nyc[1], 10);
+    const minutes_nyc = parseInt(time12_min_match_nyc[2], 10);
+    const period_nyc = time12_min_match_nyc[3].toLowerCase();
+    if (period_nyc === 'pm' && hours_nyc !== 12) hours_nyc += 12;
+    if (period_nyc === 'am' && hours_nyc === 12) hours_nyc = 0;
+    return `${String(hours_nyc).padStart(2, '0')}:${String(minutes_nyc).padStart(2, '0')}`;
   }
 
   // 12-hour format without minutes: "7pm", "7 pm"
-  const TIME12MATCH_NYC = TEXT_NYC.match(/\b(\d{1,2})\s*(am|pm)\b/i);
-  if (TIME12MATCH_NYC) {
-    let HOURS_NYC = parseInt(TIME12MATCH_NYC[1], 10);
-    const PERIOD_NYC = TIME12MATCH_NYC[2].toLowerCase();
-    if (PERIOD_NYC === 'pm' && HOURS_NYC !== 12) HOURS_NYC += 12;
-    if (PERIOD_NYC === 'am' && HOURS_NYC === 12) HOURS_NYC = 0;
-    return `${String(HOURS_NYC).padStart(2, '0')}:00`;
+  const time_12_match_nyc = text_nyc.match(/\b(\d{1,2})\s*(am|pm)\b/i);
+  if (time_12_match_nyc) {
+    let hours_nyc = parseInt(time_12_match_nyc[1], 10);
+    const period_nyc = time_12_match_nyc[2].toLowerCase();
+    if (period_nyc === 'pm' && hours_nyc !== 12) hours_nyc += 12;
+    if (period_nyc === 'am' && hours_nyc === 12) hours_nyc = 0;
+    return `${String(hours_nyc).padStart(2, '0')}:00`;
   }
 
   // 24-hour format fallback (for cases like 19:00 that didn't match above due to am/pm check)
-  if (TIME24MATCH_NYC) {
-    const HOURS_NYC = parseInt(TIME24MATCH_NYC[1], 10);
-    const MINUTES_NYC = parseInt(TIME24MATCH_NYC[2], 10);
-    return `${String(HOURS_NYC).padStart(2, '0')}:${String(MINUTES_NYC).padStart(2, '0')}`;
+  if (time_24_match_nyc) {
+    const hours_nyc = parseInt(time_24_match_nyc[1], 10);
+    const minutes_nyc = parseInt(time_24_match_nyc[2], 10);
+    return `${String(hours_nyc).padStart(2, '0')}:${String(minutes_nyc).padStart(2, '0')}`;
   }
 
   return null;
@@ -131,26 +131,26 @@ function PARSETIME_NYC(TEXT_NYC) {
  * Extracts party size from text.
  * Supports: "for 4", "4 people", "party of 4"
  */
-function PARSEPARTYSIZE_NYC(TEXT_NYC) {
+function parse_party_size_nyc(text_nyc) {
   // "for X people", "for X"
-  const FORMATCH_NYC = TEXT_NYC.match(/\bfor\s+(\d+)\s*(?:people|persons|guests|diners)?\b/i);
-  if (FORMATCH_NYC) {
-    return parseInt(FORMATCH_NYC[1], 10);
+  const for_match_nyc = text_nyc.match(/\bfor\s+(\d+)\s*(?:people|persons|guests|diners)?\b/i);
+  if (for_match_nyc) {
+    return parseInt(for_match_nyc[1], 10);
   }
 
   // "X people/persons/guests"
-  const PEOPLEMATCH_NYC = TEXT_NYC.match(/\b(\d+)\s+(?:people|persons|guests|diners)\b/i);
-  if (PEOPLEMATCH_NYC) {
-    return parseInt(PEOPLEMATCH_NYC[1], 10);
+  const people_match_nyc = text_nyc.match(/\b(\d+)\s+(?:people|persons|guests|diners)\b/i);
+  if (people_match_nyc) {
+    return parseInt(people_match_nyc[1], 10);
   }
 
   // "party of X"
-  const PARTYMATCH_NYC = TEXT_NYC.match(/\bparty\s+of\s+(\d+)\b/i);
-  if (PARTYMATCH_NYC) {
-    return parseInt(PARTYMATCH_NYC[1], 10);
+  const party_match_nyc = text_nyc.match(/\bparty\s+of\s+(\d+)\b/i);
+  if (party_match_nyc) {
+    return parseInt(party_match_nyc[1], 10);
   }
 
   return null;
 }
 
-module.exports = { PARSEREQUEST_NYC };
+module.exports = { parse_request_nyc };

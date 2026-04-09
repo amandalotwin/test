@@ -1,80 +1,80 @@
-const CAPACITY_NYC = 20;
+const capacity_nyc = 20;
 
-let BOOKINGS_NYC = {};
+let bookings_nyc = {};
 
 /**
  * Checks if a time slot is available for the given party size.
  *
- * @param {{ DATE_NYC: string, TIME_NYC: string, PARTYSIZE_NYC: number }} params
- * @returns {Promise<{ AVAILABLE_NYC: boolean }>}
+ * @param {{ date_nyc: string, time_nyc: string, PARTY_SIZE_nyc: number }} params
+ * @returns {Promise<{ available_nyc: boolean }>}
  */
-async function CHECKAVAILABILITY_NYC({ DATE_NYC, TIME_NYC, PARTYSIZE_NYC }) {
-  const KEY_NYC = `${DATE_NYC}_${TIME_NYC}`;
-  const CURRENTCOUNT_NYC = BOOKINGS_NYC[KEY_NYC] || 0;
-  const AVAILABLE_NYC = CURRENTCOUNT_NYC + PARTYSIZE_NYC <= CAPACITY_NYC;
-  return { AVAILABLE_NYC };
+async function check_availability_nyc({ date_nyc, time_nyc, PARTY_SIZE_nyc }) {
+  const key_nyc = `${date_nyc}_${time_nyc}`;
+  const current_count_nyc = bookings_nyc[key_nyc] || 0;
+  const available_nyc = current_count_nyc + PARTY_SIZE_nyc <= capacity_nyc;
+  return { available_nyc };
 }
 
 /**
  * Makes a reservation and returns a confirmation ID.
  *
- * @param {{ DATE_NYC: string, TIME_NYC: string, PARTYSIZE_NYC: number }} params
- * @returns {Promise<{ CONFIRMATION_NYC: string }>}
+ * @param {{ date_nyc: string, time_nyc: string, PARTY_SIZE_nyc: number }} params
+ * @returns {Promise<{ confirmation_nyc: string }>}
  */
-async function MAKERESERVATION_NYC({ DATE_NYC, TIME_NYC, PARTYSIZE_NYC }) {
-  const KEY_NYC = `${DATE_NYC}_${TIME_NYC}`;
-  BOOKINGS_NYC[KEY_NYC] = (BOOKINGS_NYC[KEY_NYC] || 0) + PARTYSIZE_NYC;
-  const CONFIRMATION_NYC = `RES-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-  return { CONFIRMATION_NYC };
+async function make_reservation_nyc({ date_nyc, time_nyc, PARTY_SIZE_nyc }) {
+  const key_nyc = `${date_nyc}_${time_nyc}`;
+  bookings_nyc[key_nyc] = (bookings_nyc[key_nyc] || 0) + PARTY_SIZE_nyc;
+  const confirmation_nyc = `RES-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  return { confirmation_nyc };
 }
 
 /**
  * Suggests alternative available time slots near the requested date and time.
  * Checks adjacent hours on the same date and the same time on adjacent dates.
  *
- * @param {{ DATE_NYC: string, TIME_NYC: string, PARTYSIZE_NYC: number }} params
- * @returns {Promise<Array<{ DATE_NYC: string, TIME_NYC: string }>>}
+ * @param {{ date_nyc: string, time_nyc: string, PARTY_SIZE_nyc: number }} params
+ * @returns {Promise<Array<{ date_nyc: string, time_nyc: string }>>}
  */
-async function SUGGESTALTERNATIVES_NYC({ DATE_NYC, TIME_NYC, PARTYSIZE_NYC }) {
-  const SUGGESTIONS_NYC = [];
-  const HOUR_NYC = parseInt(TIME_NYC.split(':')[0], 10);
-  const MINUTE_NYC = TIME_NYC.split(':')[1];
+async function suggest_alternatives_nyc({ date_nyc, time_nyc, PARTY_SIZE_nyc }) {
+  const suggestions_nyc = [];
+  const hour_nyc = parseInt(time_nyc.split(':')[0], 10);
+  const minute_nyc = time_nyc.split(':')[1];
 
   // Check nearby hours on the same date (up to 3 hours earlier and later)
-  for (let OFFSET_NYC = -3; OFFSET_NYC <= 3; OFFSET_NYC++) {
-    if (OFFSET_NYC === 0) continue;
-    const ALTHOUR_NYC = HOUR_NYC + OFFSET_NYC;
-    if (ALTHOUR_NYC < 9 || ALTHOUR_NYC > 22) continue; // Restaurant hours: 9am-10pm
-    const ALTTIME_NYC = `${String(ALTHOUR_NYC).padStart(2, '0')}:${MINUTE_NYC}`;
-    const KEY_NYC = `${DATE_NYC}_${ALTTIME_NYC}`;
-    const CURRENTCOUNT_NYC = BOOKINGS_NYC[KEY_NYC] || 0;
-    if (CURRENTCOUNT_NYC + PARTYSIZE_NYC <= CAPACITY_NYC) {
-      SUGGESTIONS_NYC.push({ DATE_NYC, TIME_NYC: ALTTIME_NYC });
+  for (let offset_nyc = -3; offset_nyc <= 3; offset_nyc++) {
+    if (offset_nyc === 0) continue;
+    const alt_hour_nyc = hour_nyc + offset_nyc;
+    if (alt_hour_nyc < 9 || alt_hour_nyc > 22) continue; // Restaurant hours: 9am-10pm
+    const alt_time_nyc = `${String(alt_hour_nyc).padStart(2, '0')}:${minute_nyc}`;
+    const key_nyc = `${date_nyc}_${alt_time_nyc}`;
+    const current_count_nyc = bookings_nyc[key_nyc] || 0;
+    if (current_count_nyc + PARTY_SIZE_nyc <= capacity_nyc) {
+      suggestions_nyc.push({ date_nyc, time_nyc: alt_time_nyc });
     }
   }
 
   // Check the same time on adjacent dates (up to 2 days before and after)
-  const BASEDATE_NYC = new Date(DATE_NYC + 'T12:00:00');
-  for (let DAYOFFSET_NYC = -2; DAYOFFSET_NYC <= 2; DAYOFFSET_NYC++) {
-    if (DAYOFFSET_NYC === 0) continue;
-    const ALTDATE_NYC = new Date(BASEDATE_NYC);
-    ALTDATE_NYC.setDate(ALTDATE_NYC.getDate() + DAYOFFSET_NYC);
-    const ALTDATESTR_NYC = ALTDATE_NYC.toISOString().split('T')[0];
-    const KEY_NYC = `${ALTDATESTR_NYC}_${TIME_NYC}`;
-    const CURRENTCOUNT_NYC = BOOKINGS_NYC[KEY_NYC] || 0;
-    if (CURRENTCOUNT_NYC + PARTYSIZE_NYC <= CAPACITY_NYC) {
-      SUGGESTIONS_NYC.push({ DATE_NYC: ALTDATESTR_NYC, TIME_NYC });
+  const base_date_nyc = new Date(date_nyc + 'T12:00:00');
+  for (let day_offset_nyc = -2; day_offset_nyc <= 2; day_offset_nyc++) {
+    if (day_offset_nyc === 0) continue;
+    const alt_date_nyc = new Date(base_date_nyc);
+    alt_date_nyc.setDate(alt_date_nyc.getDate() + day_offset_nyc);
+    const alt_date_str_nyc = alt_date_nyc.toISOString().split('T')[0];
+    const key_nyc = `${alt_date_str_nyc}_${time_nyc}`;
+    const current_count_nyc = bookings_nyc[key_nyc] || 0;
+    if (current_count_nyc + PARTY_SIZE_nyc <= capacity_nyc) {
+      suggestions_nyc.push({ date_nyc: alt_date_str_nyc, time_nyc });
     }
   }
 
-  return SUGGESTIONS_NYC;
+  return suggestions_nyc;
 }
 
 /**
  * Resets the bookings store. Used by tests to clear state between runs.
  */
-function RESETBOOKINGS_NYC() {
-  BOOKINGS_NYC = {};
+function reset_bookings_nyc() {
+  bookings_nyc = {};
 }
 
-module.exports = { CHECKAVAILABILITY_NYC, MAKERESERVATION_NYC, SUGGESTALTERNATIVES_NYC, RESETBOOKINGS_NYC };
+module.exports = { check_availability_nyc, make_reservation_nyc, suggest_alternatives_nyc, reset_bookings_nyc };
