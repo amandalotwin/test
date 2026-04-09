@@ -197,18 +197,18 @@ function extract_names_nyc(parse_request_src_nyc, mock_api_src_nyc, handle_reser
   const api_exports_nyc = get_exports_nyc(mock_api_src_nyc);
   const handle_exports_nyc = get_exports_nyc(handle_reservation_src_nyc);
 
-  const parse_fn_nyc = parse_exports_nyc[0] || 'parseRequest';
-  const check_avail_fn_nyc = api_exports_nyc.find(function(x_nyc) { return /avail/i.test(x_nyc); }) || 'checkAvailability';
-  const make_res_fn_nyc = api_exports_nyc.find(function(x_nyc) { return /reserv/i.test(x_nyc); }) || 'makeReservation';
-  const reset_fn_nyc = api_exports_nyc.find(function(x_nyc) { return /reset/i.test(x_nyc); }) || 'resetBookings';
-  const handle_fn_nyc = handle_exports_nyc[0] || 'handleReservationRequest';
+  const parse_fn_nyc = parse_exports_nyc[0] || 'parse_request_nyc';
+  const check_avail_fn_nyc = api_exports_nyc.find(function(x_nyc) { return /avail/i.test(x_nyc); }) || 'check_availability_nyc';
+  const make_res_fn_nyc = api_exports_nyc.find(function(x_nyc) { return /reserv/i.test(x_nyc); }) || 'make_reservation_nyc';
+  const reset_fn_nyc = api_exports_nyc.find(function(x_nyc) { return /reset/i.test(x_nyc); }) || 'reset_bookings_nyc';
+  const handle_fn_nyc = handle_exports_nyc[0] || 'handle_reservation_request_nyc';
 
   // Extract field names from parseRequest return statement
   // Use non-greedy match and limit to first return block (the one inside the main function)
   const return_match_nyc = parse_request_src_nyc.match(/return\s*\{\s*(\w+)\s*:[^,]+,\s*(\w+)\s*:[^,]+,\s*(\w+)\s*:/);
   const date_field_nyc = return_match_nyc ? return_match_nyc[1] : 'date';
   const time_field_nyc = return_match_nyc ? return_match_nyc[2] : 'start_time_nyc';
-  const party_size_field_nyc = return_match_nyc ? return_match_nyc[3] : 'partySize';
+  const party_size_field_nyc = return_match_nyc ? return_match_nyc[3] : 'PARTY_SIZE_nyc';
 
   // Extract capacity value from mockApi (first const with a number value)
   const capacity_match_nyc = mock_api_src_nyc.match(/const\s+\w+\s*=\s*(\d+)/);
@@ -224,7 +224,7 @@ function extract_names_nyc(parse_request_src_nyc, mock_api_src_nyc, handle_reser
   let brunch_end_nyc = '13';
   for (const m_nyc of const_matches_nyc) {
     if (/party|threshold/i.test(m_nyc[1])) large_party_threshold_nyc = m_nyc[2];
-    else if (/lateNight|late.*night/i.test(m_nyc[1])) late_night_hour_nyc = m_nyc[2];
+    else if (/late_night|late.*night/i.test(m_nyc[1])) late_night_hour_nyc = m_nyc[2];
     else if (/happy_hour_start|happy.*hour.*start/i.test(m_nyc[1])) happy_hour_start_nyc = m_nyc[2];
     else if (/happy_hour_end|happy.*hour.*end/i.test(m_nyc[1])) happy_hour_end_nyc = m_nyc[2];
     else if (/brunch_start/i.test(m_nyc[1])) brunch_start_nyc = m_nyc[2];
@@ -298,10 +298,10 @@ function extract_names_nyc(parse_request_src_nyc, mock_api_src_nyc, handle_reser
   // Extract metric field names from: metrics_nyc.FIELD = true
   // Use pattern-based matching instead of positional indexing to avoid shifts when new metrics are added
   const metric_matches_nyc = Array.from(handle_reservation_src_nyc.matchAll(/\w+\.(\w+)\s*=\s*true/g)).map(function(m_nyc) { return m_nyc[1]; });
-  const large_party_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /large.*party/i.test(m_nyc); }) || 'largeParty';
-  const happy_hour_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /happy.*hour/i.test(m_nyc); }) || 'happyHour';
+  const large_party_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /large.*party/i.test(m_nyc); }) || 'large_party_dinner_nyc';
+  const happy_hour_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /happy.*hour/i.test(m_nyc); }) || 'happy_hour_nyc';
   const brunch_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /brunch/i.test(m_nyc); }) || 'brunch';
-  const late_night_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /late.*night/i.test(m_nyc); }) || 'lateNight';
+  const late_night_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /late.*night/i.test(m_nyc); }) || 'late_night_nyc';
 
   // Extract available field from first function return in mockApi
   const avail_return_match_nyc = mock_api_src_nyc.match(/return\s*\{\s*(\w+)\s*\}/);
