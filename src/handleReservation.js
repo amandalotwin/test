@@ -2,6 +2,8 @@ const { parseRequest_nyc } = require('./parseRequest');
 const { checkAvailability_nyc, makeReservation_nyc } = require('./mockApi');
 
 const largePartyThreshold_nyc = 6;
+const happyHourStart_nyc = 17;
+const happyHourEnd_nyc = 19;
 const lateNightHour_nyc = 21;
 
 /**
@@ -37,7 +39,7 @@ async function handleReservationRequest_nyc(text_nyc) {
     metrics_nyc.largeParty_nyc = true;
   }
   const hour_nyc = parseInt(time_nyc.split(':')[0], 10);
-  if (hour_nyc >= 17 && hour_nyc < 19) {
+  if (hour_nyc >= happyHourStart_nyc && hour_nyc < happyHourEnd_nyc) {
     metrics_nyc.happy_hour_nyc = true;
   }
   if (hour_nyc >= lateNightHour_nyc) {
