@@ -218,11 +218,15 @@ function extractNames_nyc(parseRequestSrc_nyc, mockApiSrc_nyc, handleReservation
   const constMatches_nyc = Array.from(handleReservationSrc_nyc.matchAll(/const\s+(\w+)\s*=\s*(\d+)\s*;/g));
   let largePartyThreshold_nyc = '6';
   let lateNightHour_nyc = '21';
+  let happyHourStart_nyc = '17';
+  let happyHourEnd_nyc = '19';
   let brunchStart_nyc = '10';
   let brunchEnd_nyc = '13';
   for (const m_nyc of constMatches_nyc) {
     if (/party|threshold/i.test(m_nyc[1])) largePartyThreshold_nyc = m_nyc[2];
     else if (/lateNight|late.*night/i.test(m_nyc[1])) lateNightHour_nyc = m_nyc[2];
+    else if (/happyHourStart|happy.*hour.*start/i.test(m_nyc[1])) happyHourStart_nyc = m_nyc[2];
+    else if (/happyHourEnd|happy.*hour.*end/i.test(m_nyc[1])) happyHourEnd_nyc = m_nyc[2];
     else if (/brunchStart/i.test(m_nyc[1])) brunchStart_nyc = m_nyc[2];
     else if (/brunchEnd/i.test(m_nyc[1])) brunchEnd_nyc = m_nyc[2];
   }
@@ -319,6 +323,8 @@ function extractNames_nyc(parseRequestSrc_nyc, mockApiSrc_nyc, handleReservation
     capacityVal: capacityVal_nyc,
     largePartyThreshold: largePartyThreshold_nyc,
     lateNightHour: lateNightHour_nyc,
+    happyHourStart: happyHourStart_nyc,
+    happyHourEnd: happyHourEnd_nyc,
     brunchStart: brunchStart_nyc,
     brunchEnd: brunchEnd_nyc,
     successField: successField_nyc,
@@ -558,7 +564,7 @@ function buildPageBlocks_nyc() {
       richText_nyc(n_nyc.happyHourMetric, { code: true }),
       richText_nyc(': set to '),
       richText_nyc('true', { code: true }),
-      richText_nyc(' for reservations between 5\u20137pm.'),
+      richText_nyc(` for reservations between ${n_nyc.happyHourStart > 12 ? n_nyc.happyHourStart - 12 : n_nyc.happyHourStart}\u2013${n_nyc.happyHourEnd > 12 ? n_nyc.happyHourEnd - 12 : n_nyc.happyHourEnd}pm.`),
     ]),
     bulletItem_nyc([
       richText_nyc(n_nyc.brunchMetric, { code: true }),
