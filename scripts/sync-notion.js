@@ -538,6 +538,40 @@ function buildPageBlocks() {
     paragraph([richText('File: '), richText('src/index.js', { code: true })]),
     codeBlock(indexSrc, 'javascript'),
 
+    // ─── Change Log ───
+    heading1('Change Log'),
+    callout(
+      'This section tracks all changes to the reservation system. Entries are added automatically for Tier 1 changes and manually for reviewed changes.',
+      '📋'
+    ),
+
+    heading3('v1.4.0 — 2026-04-08'),
+    bulletItem([richText('[Tier 1] ', { bold: true }), richText('Auto-synced Notion design spec with three-tier update system')]),
+    bulletItem([richText('[Tier 1] ', { bold: true }), richText('Added change analysis pipeline (analyze-changes.js)')]),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Added review draft generator for proposed documentation updates')]),
+
+    heading3('v1.3.0 — 2026-04-05'),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Added support for "diners" keyword in party size parsing')]),
+    bulletItem([richText('[Tier 1] ', { bold: true }), richText('Renamed internal helper '), richText('formatDateString', { code: true }), richText(' → '), richText('formatDate', { code: true })]),
+    bulletItem([richText('[Tier 3] ', { bold: true }), richText('Evaluated migration from in-memory store to SQLite — deferred to v2.0')]),
+
+    heading3('v1.2.0 — 2026-03-28'),
+    bulletItem([richText('[Tier 1] ', { bold: true }), richText('CAPACITY constant updated from 15 → 20 guests per slot')]),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Added '), richText('_resetBookings()', { code: true }), richText(' helper for test isolation')]),
+    bulletItem([richText('[Tier 1] ', { bold: true }), richText('Fixed 24-hour time parsing fallback for ambiguous formats like 6:30')]),
+
+    heading3('v1.1.0 — 2026-03-20'),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('New module: '), richText('handleReservation.js', { code: true }), richText(' orchestrator combining parse → validate → book flow')]),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Added integration test suite (7 tests) covering end-to-end reservation flow')]),
+    bulletItem([richText('[Tier 3] ', { bold: true }), richText('Documented customer-facing error messages and UX copy guidelines')]),
+
+    heading3('v1.0.0 — 2026-03-15'),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Initial release of the reservation system')]),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Natural language parser supporting ISO dates, month names, US numeric formats')]),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Mock booking API with availability checking and confirmation ID generation')]),
+    bulletItem([richText('[Tier 2] ', { bold: true }), richText('Demo entry point ('), richText('node src/index.js', { code: true }), richText(')')]),
+    bulletItem([richText('[Tier 1] ', { bold: true }), richText('10 unit tests for parser module')]),
+
     // ─── Footer ───
     divider(),
     paragraph([
