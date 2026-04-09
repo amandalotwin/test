@@ -53,7 +53,7 @@ function analyzeChanges_nyc() {
     }
 
     // Only analyze source and test files
-    if (!file.startsWith('src/') && !file.startsWith('tests/')) continue;
+    if (!file_nyc.startsWith('src/') && !file_nyc.startsWith('tests/')) continue;
 
     // ── New file_nyc = Tier 2 ──
     if (status_nyc === 'A') {
@@ -123,8 +123,8 @@ function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
       tier2_nyc.push({
         type: 'new_function',
         file_nyc,
-        name_nyc: fn,
-        description: `New function added in ${file_nyc}: ${fn}`,
+        name_nyc: fn_nyc,
+        description: `New function added in ${file_nyc}: ${fn_nyc}`,
       });
     }
   }
@@ -132,15 +132,15 @@ function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
   // ── Detect constant value changes (Tier 1) ──
   const removedConstants_nyc = extractConstants_nyc(removedLines_nyc);
   const addedConstants_nyc = extractConstants_nyc(addedLines_nyc);
-  for (const [name, oldVal_nyc] of Object.entries(removedConstants_nyc)) {
-    if (addedConstants_nyc[name] && addedConstants_nyc[name] !== oldVal_nyc) {
+  for (const [name_nyc, oldVal_nyc] of Object.entries(removedConstants_nyc)) {
+    if (addedConstants_nyc[name_nyc] && addedConstants_nyc[name_nyc] !== oldVal_nyc) {
       tier1_nyc.push({
         type: 'constant_changed',
         file_nyc,
-        name,
+        name_nyc,
         oldValue_nyc: oldVal_nyc,
-        newValue_nyc: addedConstants_nyc[name],
-        description: `Constant changed in ${file_nyc}: ${name} = ${oldVal_nyc} -> ${addedConstants_nyc[name]}`,
+        newValue_nyc: addedConstants_nyc[name_nyc],
+        description: `Constant changed in ${file_nyc}: ${name_nyc} = ${oldVal_nyc} -> ${addedConstants_nyc[name_nyc]}`,
       });
     }
   }
@@ -148,15 +148,15 @@ function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
   // ── Detect parameter changes (Tier 1) ──
   const removedParams_nyc = extractParams_nyc(removedLines_nyc);
   const addedParams_nyc = extractParams_nyc(addedLines_nyc);
-  for (const [fn, oldParams] of Object.entries(removedParams_nyc)) {
-    if (addedParams_nyc[fn] && addedParams_nyc[fn] !== oldParams) {
+  for (const [fn_nyc, oldParams_nyc] of Object.entries(removedParams_nyc)) {
+    if (addedParams_nyc[fn_nyc] && addedParams_nyc[fn_nyc] !== oldParams_nyc) {
       tier1_nyc.push({
         type: 'params_changed',
         file_nyc,
-        function: fn,
-        oldParams,
-        newParams_nyc: addedParams_nyc[fn],
-        description: `Parameters changed for ${fn} in ${file_nyc}`,
+        function: fn_nyc,
+        oldParams_nyc,
+        newParams_nyc: addedParams_nyc[fn_nyc],
+        description: `Parameters changed for ${fn_nyc} in ${file_nyc}`,
       });
     }
   }
@@ -203,7 +203,7 @@ function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
   const removedCreds_nyc = removedLines_nyc.filter((l_nyc) => credentialPattern_nyc.test(l_nyc));
   const addedCreds_nyc = addedLines_nyc.filter((l_nyc) => credentialPattern_nyc.test(l_nyc));
   if ((removedCreds_nyc.length > 0 || addedCreds_nyc.length > 0) &&
-      !(removedCreds_nyc.length === addedCreds_nyc.length && removedCreds_nyc.every((l_nyc, i_nyc) => addedCreds_nyc[i]?.substring(1) === l.substring(1)))) {
+      !(removedCreds_nyc.length === addedCreds_nyc.length && removedCreds_nyc.every((l_nyc, i_nyc) => addedCreds_nyc[i_nyc]?.substring(1) === l_nyc.substring(1)))) {
     tier1_nyc.push({
       type: 'credential_config_changed',
       file_nyc,
@@ -282,9 +282,9 @@ function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
 
 // ── Extraction helpers ──
 
-function extractFunctionNames_nyc(lines) {
+function extractFunctionNames_nyc(lines_nyc) {
   const names_nyc = new Set();
-  for (const line_nyc of lines) {
+  for (const line_nyc of lines_nyc) {
     const fnMatch_nyc = line_nyc.match(/^[+-]\s*(?:async\s+)?function\s+(\w+)/);
     if (fnMatch_nyc) names_nyc.add(fnMatch_nyc[1]);
 
@@ -294,9 +294,9 @@ function extractFunctionNames_nyc(lines) {
   return [...names_nyc];
 }
 
-function extractConstants_nyc(lines) {
+function extractConstants_nyc(lines_nyc) {
   const constants_nyc = {};
-  for (const line_nyc of lines) {
+  for (const line_nyc of lines_nyc) {
     // Only match module-level constants (no indentation beyond the diff prefix)
     const match_nyc = line_nyc.match(/^[+-]const\s+([a-zA-Z_]\w*)\s*=\s*(.+?)\s*;/);
     if (match_nyc) constants_nyc[match_nyc[1]] = match_nyc[2];
@@ -304,18 +304,18 @@ function extractConstants_nyc(lines) {
   return constants_nyc;
 }
 
-function extractParams_nyc(lines) {
+function extractParams_nyc(lines_nyc) {
   const params_nyc = {};
-  for (const line_nyc of lines) {
+  for (const line_nyc of lines_nyc) {
     const match_nyc = line_nyc.match(/^[+-]\s*(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/);
     if (match_nyc) params_nyc[match_nyc[1]] = match_nyc[2].trim();
   }
   return params_nyc;
 }
 
-function extractObjectFields_nyc(lines) {
+function extractObjectFields_nyc(lines_nyc) {
   const fields_nyc = new Set();
-  for (const line_nyc of lines) {
+  for (const line_nyc of lines_nyc) {
     // Match object property patterns: key: value or key,
     const match_nyc = line_nyc.match(/^[+-]\s+(\w+)\s*[:,]/);
     if (match_nyc && !['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while'].includes(match_nyc[1])) {

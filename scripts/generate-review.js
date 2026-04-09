@@ -72,7 +72,7 @@ function extractFunctionSignature_nyc(file_nyc, functionName_nyc) {
 }
 
 function generateReviewDraft_nyc(analysis_nyc) {
-  const { tier2: tier2_nyc } = analysis_nyc;
+  const { tier2_nyc } = analysis_nyc;
   const lines_nyc = [];
 
   lines_nyc.push('# Proposed Notion Documentation Update');
@@ -87,11 +87,11 @@ function generateReviewDraft_nyc(analysis_nyc) {
     lines_nyc.push('');
 
     // Group by type
-    const newFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type_nyc === 'new_file');
-    const deletedFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type_nyc === 'deleted_file');
-    const newFunctions_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type_nyc === 'new_function');
-    const commentChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type_nyc === 'comments_changed');
-    const significantChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type_nyc === 'significant_change');
+    const newFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_file');
+    const deletedFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'deleted_file');
+    const newFunctions_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_function');
+    const commentChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'comments_changed');
+    const significantChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'significant_change');
 
     if (newFiles_nyc.length > 0) {
       lines_nyc.push('### New Files');
@@ -220,7 +220,7 @@ function generateReviewDraft_nyc(analysis_nyc) {
     lines_nyc.push(`### ${new Date().toISOString().split('T')[0]}`);
     lines_nyc.push('');
     for (const change_nyc of allChanges_nyc) {
-      lines_nyc.push(`- ${change_nyc.description_nyc}`);
+      lines_nyc.push(`- ${change_nyc.description}`);
     }
   } else {
     lines_nyc.push('_No significant changes to document._');
