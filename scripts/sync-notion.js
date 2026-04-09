@@ -186,13 +186,13 @@ function readSource(filename) {
 // ─── Build the page content ─────────────────────────────────────────
 
 function buildPageBlocks() {
-  const parse_request_src = readSource('parseRequest.js');
-  const mock_api_src = readSource('mockApi.js');
-  const handle_reservation_src = readSource('handleReservation.js');
-  const index_src = readSource('index.js');
+  const parseRequestSrc = readSource('parseRequest.js');
+  const mockApiSrc = readSource('mockApi.js');
+  const handleReservationSrc = readSource('handleReservation.js');
+  const indexSrc = readSource('index.js');
 
   // Extract capacity from mockApi.js
-  const capacityMatch = mock_api_src.match(/const capacity = (\d+)/);
+  const capacityMatch = mockApiSrc.match(/const capacity = (\d+)/);
   const capacity = capacityMatch ? capacityMatch[1] : '20';
 
   const blocks = [
@@ -217,7 +217,7 @@ function buildPageBlocks() {
         '                       │\n' +
         '                       ▼\n' +
         '┌─────────────────────────────────────────────────────┐\n' +
-        '│            handle_reservation_request()              │\n' +
+        '│            handleReservationRequest()                │\n' +
         '│                  (Orchestrator)                      │\n' +
         '│                                                     │\n' +
         '│  1. Parse the natural language input                 │\n' +
@@ -228,8 +228,8 @@ function buildPageBlocks() {
         '       │              │              │\n' +
         '       ▼              ▼              ▼\n' +
         '┌────────────┐ ┌─────────────┐ ┌─────────────────┐\n' +
-        '│parse_request│ │ check_avail-│ │ make_reservation │\n' +
-        '│   (Parser) │ │  ability    │ │    (Booking)     │\n' +
+                '│parseRequest │ │ checkAvail- │ │ makeReservation  │\n' +
+                '│   (Parser) │ │  ability    │ │    (Booking)     │\n' +
         '│            │ │  (Mock API) │ │   (Mock API)     │\n' +
         '└────────────┘ └─────────────┘ └─────────────────┘',
       'plain text'
@@ -253,11 +253,11 @@ function buildPageBlocks() {
     heading1('Module 1: Natural Language Parser'),
     paragraph([richText('File: '), richText('src/parseRequest.js', { code: true })]),
 
-    heading2('parse_request(text)'),
+    heading2('parseRequest(text)'),
     paragraph('Parses a natural language string and extracts reservation details using regex.'),
     paragraph([richText('Input: ', { bold: true }), richText('A string like "I\'d like a table for 4 on March 15th at 7pm"')]),
     paragraph([richText('Output:', { bold: true })]),
-    codeBlock('{\n  "date": "2026-03-15",\n  "time": "19:00",\n  "party_size": 4\n}', 'json'),
+    codeBlock('{\n  "date": "2026-03-15",\n  "time": "19:00",\n  "partySize": 4\n}', 'json'),
     paragraph('Any field that cannot be extracted returns null.'),
 
     heading3('Supported Date Formats'),
@@ -294,7 +294,7 @@ function buildPageBlocks() {
     paragraph('Also recognizes: persons, guests, diners.'),
 
     heading3('Source Code'),
-    codeBlock(parse_request_src, 'javascript'),
+    codeBlock(parseRequestSrc, 'javascript'),
     divider(),
 
     // ─── Module 2: Booking API ───
@@ -305,7 +305,7 @@ function buildPageBlocks() {
       '🔧'
     ),
 
-    heading2('check_availability({ date, time, party_size })'),
+    heading2('checkAvailability({ date, time, partySize })'),
     paragraph('Checks whether a time slot has room for the requested party.'),
     heading3('Parameters'),
     tableBlock(
@@ -313,23 +313,23 @@ function buildPageBlocks() {
       [
         ['date', 'string', 'Date in YYYY-MM-DD format'],
         ['time', 'string', 'Time in HH:MM (24-hour) format'],
-        ['party_size', 'number', 'Number of guests'],
+        ['partySize', 'number', 'Number of guests'],
       ]
     ),
     paragraph([richText('Returns: ', { bold: true }), richText('Promise<{ available: boolean }>')]),
     paragraph(`A time slot (date + time combination) has a capacity of ${capacity} guests. If the total booked guests plus the new party size exceeds ${capacity}, the slot is unavailable.`),
     codeBlock(
-      'const { check_availability } = require(\'./mockApi\');\n\n' +
-        'const result = await check_availability({\n' +
+      'const { checkAvailability } = require(\'./mockApi\');\n\n' +
+        'const result = await checkAvailability({\n' +
         '  date: \'2026-12-25\',\n' +
         '  time: \'19:00\',\n' +
-        '  party_size: 4\n' +
+        '  partySize: 4\n' +
         '});\n' +
         '// → { available: true }',
       'javascript'
     ),
 
-    heading2('make_reservation({ date, time, party_size })'),
+    heading2('makeReservation({ date, time, partySize })'),
     paragraph('Creates a reservation and returns a unique confirmation ID.'),
     heading3('Parameters'),
     tableBlock(
@@ -337,38 +337,38 @@ function buildPageBlocks() {
       [
         ['date', 'string', 'Date in YYYY-MM-DD format'],
         ['time', 'string', 'Time in HH:MM (24-hour) format'],
-        ['party_size', 'number', 'Number of guests'],
+        ['partySize', 'number', 'Number of guests'],
       ]
     ),
     paragraph([richText('Returns: ', { bold: true }), richText('Promise<{ confirmation: string }>')]),
     paragraph('The confirmation ID follows the format RES-XXXXX (5 random alphanumeric characters).'),
     codeBlock(
-      'const { make_reservation } = require(\'./mockApi\');\n\n' +
-        'const result = await make_reservation({\n' +
+      'const { makeReservation } = require(\'./mockApi\');\n\n' +
+        'const result = await makeReservation({\n' +
         '  date: \'2026-12-25\',\n' +
         '  time: \'19:00\',\n' +
-        '  party_size: 4\n' +
+        '  partySize: 4\n' +
         '});\n' +
         '// → { confirmation: "RES-A3F7K" }',
       'javascript'
     ),
 
-    heading2('reset_bookings()'),
+    heading2('resetBookings()'),
     paragraph('Resets the in-memory booking store. Intended for testing use only.'),
     codeBlock(
-      'const { reset_bookings } = require(\'./mockApi\');\nreset_bookings(); // clears all bookings',
+      'const { resetBookings } = require(\'./mockApi\');\nresetBookings(); // clears all bookings',
       'javascript'
     ),
 
     heading3('Source Code'),
-    codeBlock(mock_api_src, 'javascript'),
+    codeBlock(mockApiSrc, 'javascript'),
     divider(),
 
     // ─── Module 3: Orchestrator ───
     heading1('Module 3: Orchestrator'),
     paragraph([richText('File: '), richText('src/handleReservation.js', { code: true })]),
 
-    heading2('handle_reservation_request(text)'),
+    heading2('handleReservationRequest(text)'),
     paragraph(
       'The main entry point for processing a reservation. Takes a natural language string, parses it, checks availability, and either books the reservation or returns an appropriate error.'
     ),
@@ -384,10 +384,10 @@ function buildPageBlocks() {
         '  "details": {\n' +
         '    "date": "2026-12-25",\n' +
         '    "time": "19:00",\n' +
-        '    "party_size": 8\n' +
+        '    "partySize": 8\n' +
         '  },\n' +
         '  "metrics": {\n' +
-        '    "large_party": true\n' +
+        '    "largeParty": true\n' +
         '  }\n' +
         '}',
       'json'
@@ -396,7 +396,7 @@ function buildPageBlocks() {
       richText('The '),
       richText('metrics', { code: true }),
       richText(' object is included on all successful responses. '),
-      richText('large_party', { code: true }),
+      richText('largeParty', { code: true }),
       richText(' is set to '),
       richText('true', { code: true }),
       richText(' when the party size exceeds 6 guests.'),
@@ -425,17 +425,17 @@ function buildPageBlocks() {
       'Input text\n' +
         '    │\n' +
         '    ▼\n' +
-        'parse_request(text)\n' +
+        'parseRequest(text)\n' +
         '    │\n' +
         '    ├── Any field is null? → Return parsing error\n' +
         '    │\n' +
         '    ▼\n' +
-        'check_availability({ date, time, party_size })\n' +
+        'checkAvailability({ date, time, partySize })\n' +
         '    │\n' +
         '    ├── available: false → Return unavailable error\n' +
         '    │\n' +
         '    ▼\n' +
-        'make_reservation({ date, time, party_size })\n' +
+        'makeReservation({ date, time, partySize })\n' +
         '    │\n' +
         '    ▼\n' +
         'Return success with confirmation ID and details',
@@ -443,7 +443,7 @@ function buildPageBlocks() {
     ),
 
     heading3('Source Code'),
-    codeBlock(handle_reservation_src, 'javascript'),
+    codeBlock(handleReservationSrc, 'javascript'),
     divider(),
 
     // ─── Integration Guide ───
@@ -457,14 +457,14 @@ function buildPageBlocks() {
 
     heading2('Step 3: Use in Your Application'),
     codeBlock(
-      'const { handle_reservation_request } = require(\'./src/handleReservation\');\n\n' +
+      'const { handleReservationRequest } = require(\'./src/handleReservation\');\n\n' +
         '// From your chatbot, web form, SMS handler, etc.\n' +
         'const userInput = "Table for 4 on December 25th at 7pm";\n' +
-        'const result = await handle_reservation_request(userInput);\n\n' +
+        'const result = await handleReservationRequest(userInput);\n\n' +
         'if (result.success) {\n' +
         '  console.log(result.message);       // "Reservation confirmed! ..."\n' +
         '  console.log(result.confirmation);   // "RES-A3F7K"\n' +
-        '  console.log(result.details);       // { date, time, party_size }\n' +
+        '  console.log(result.details);       // { date, time, partySize }\n' +
         '} else {\n' +
         '  console.log(result.message);\n' +
         '}',
@@ -480,25 +480,25 @@ function buildPageBlocks() {
     tableBlock(
       ['Function', 'Must Accept', 'Must Return'],
       [
-        ['check_availability', '{ date: string, time: string, party_size: number }', 'Promise<{ available: boolean }>'],
-        ['make_reservation', '{ date: string, time: string, party_size: number }', 'Promise<{ confirmation: string }>'],
+        ['checkAvailability', '{ date: string, time: string, partySize: number }', 'Promise<{ available: boolean }>'],
+        ['makeReservation', '{ date: string, time: string, partySize: number }', 'Promise<{ confirmation: string }>'],
       ]
     ),
     paragraph('Example with a SQL database:'),
     codeBlock(
-      'async function check_availability({ date, time, party_size }) {\n' +
+      'async function checkAvailability({ date, time, partySize }) {\n' +
         '  const row = await db.query(\n' +
         "    'SELECT SUM(party_size) AS total FROM reservations WHERE date = ? AND time = ?',\n" +
         '    [date, time]\n' +
         '  );\n' +
-        '  const current_count = row.total || 0;\n' +
-        '  return { available: current_count + party_size <= YOUR_CAPACITY };\n' +
+        '  const currentCount = row.total || 0;\n' +
+        '  return { available: currentCount + partySize <= YOUR_CAPACITY };\n' +
         '}\n\n' +
-        'async function make_reservation({ date, time, party_size }) {\n' +
+        'async function makeReservation({ date, time, partySize }) {\n' +
         '  const confirmation = generateUniqueId();\n' +
         '  await db.query(\n' +
         "    'INSERT INTO reservations (confirmation, date, time, party_size) VALUES (?, ?, ?, ?)',\n" +
-        '    [confirmation, date, time, party_size]\n' +
+        '    [confirmation, date, time, partySize]\n' +
         '  );\n' +
         '  return { confirmation };\n' +
         '}',
@@ -526,7 +526,7 @@ function buildPageBlocks() {
       [
         ['date', 'YYYY-MM-DD', '2026-12-25'],
         ['time', 'HH:MM (24-hour)', '19:00'],
-        ['party_size', 'Integer', '4'],
+        ['partySize', 'Integer', '4'],
         ['confirmation', 'RES-XXXXX', 'RES-A3F7K'],
       ]
     ),
@@ -548,7 +548,7 @@ function buildPageBlocks() {
     // ─── Demo Entry Point ───
     heading1('Demo Entry Point'),
     paragraph([richText('File: '), richText('src/index.js', { code: true })]),
-    codeBlock(index_src, 'javascript'),
+    codeBlock(indexSrc, 'javascript'),
 
     // ─── Change Log ───
     heading1('Change Log'),
@@ -569,7 +569,7 @@ function buildPageBlocks() {
 
     heading3('v1.2.0 — 2026-03-28'),
     bulletItem('capacity constant updated from 15 → 20 guests per slot'),
-    bulletItem([richText('Added '), richText('reset_bookings()', { code: true }), richText(' helper for test isolation')]),
+    bulletItem([richText('Added '), richText('resetBookings()', { code: true }), richText(' helper for test isolation')]),
     bulletItem('Fixed 24-hour time parsing fallback for ambiguous formats like 6:30'),
 
     heading3('v1.1.0 — 2026-03-20'),
