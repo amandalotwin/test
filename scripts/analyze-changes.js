@@ -1,9 +1,12 @@
 /**
  * Analyzes git diff and categorizes changes into three tiers.
  *
- * Tier 1 (Devin Automatic): Renames, field/param changes, constant updates
- * Tier 2 (Needs Review): New functionality, description changes, release notes
- * Tier 3 (Human Only): Dependency changes, major API/structural changes, metrics changes
+ * Tier 1 (Devin Automatic): Changes to syntax, field/variable names, endpoint URLs,
+ *   publicly available credentials — anything a user would copy and paste from the docs.
+ * Tier 2 (Needs Review): Descriptions for release notes, documentation of brand new
+ *   functionality, installation instructions, or anything similar.
+ * Tier 3 (Human Only): Metrics changes, major dependency changes, major structural
+ *   changes requiring customer-side updates, or changes to API types (e.g. SOAP to REST).
  *
  * Outputs JSON to stdout: { tier1: [...], tier2: [...], tier3: [...] }
  */
@@ -177,7 +180,40 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
     }
   }
 
-  // ── Detect major structural changes (Tier 3) ──
+  // ── Detect endpoint URL changes (Tier 1) ──
+  const urlPattern = /['"`]((?:https?:\/\/|\/api\/|\/v\d+\/)\S+)['"`]/;
+  const removedUrls = removedLines
+    .map((l) => { const m = l.match(urlPattern); return m ? m[1] : null; })
+    .filter(Boolean);
+  const addedUrls = addedLines
+    .map((l) => { const m = l.match(urlPattern); return m ? m[1] : null; })
+    .filter(Boolean);
+  const urlRemovedOnly = removedUrls.filter((u) => !addedUrls.includes(u));
+  const urlAddedOnly = addedUrls.filter((u) => !removedUrls.includes(u));
+  if (urlRemovedOnly.length > 0 || urlAddedOnly.length > 0) {
+    tier1.push({
+      type: 'endpoint_url_changed',
+      file,
+      removedUrls: urlRemovedOnly,
+      addedUrls: urlAddedOnly,
+      description: `Endpoint URL changes in ${file} (${urlRemovedOnly.length} removed, ${urlAddedOnly.length} added)`,
+    });
+  }
+
+  // ── Detect credential/config value changes (Tier 1) ──
+  const credentialPattern = /\b(api_key|apikey|api_token|token|secret|password|credential|auth|base_url|endpoint)\b/i;
+  const removedCreds = removedLines.filter((l) => credentialPattern.test(l));
+  const addedCreds = addedLines.filter((l) => credentialPattern.test(l));
+  if ((removedCreds.length > 0 || addedCreds.length > 0) &&
+      !removedCreds.every((l, i) => addedCreds[i] === l)) {
+    tier1.push({
+      type: 'credential_config_changed',
+      file,
+      description: `Publicly available credential/config changes in ${file} (${addedCreds.length} added, ${removedCreds.length} removed)`,
+    });
+  }
+
+  // ── Detect major structural changes requiring customer-side changes (Tier 3) ──
   const newImports = addedLines.filter(
     (l) => l.match(/^\+.*require\s*\(/) || l.match(/^\+.*import\s+/)
   );
@@ -188,7 +224,19 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
     tier3.push({
       type: 'major_structural_change',
       file,
-      description: `Major import/require changes in ${file} (${newImports.length} added, ${removedImports.length} removed)`,
+      description: `Major import/require changes in ${file} (${newImports.length} added, ${removedImports.length} removed) — may require customer-side updates`,
+    });
+  }
+
+  // ── Detect API type changes e.g. SOAP to REST (Tier 3) ──
+  const apiTypePattern = /\b(soap|rest|graphql|grpc|websocket|xml-rpc|json-rpc)\b/i;
+  const removedApiTypes = removedLines.filter((l) => apiTypePattern.test(l));
+  const addedApiTypes = addedLines.filter((l) => apiTypePattern.test(l));
+  if (removedApiTypes.length > 0 && addedApiTypes.length > 0) {
+    tier3.push({
+      type: 'api_type_change',
+      file,
+      description: `API type/protocol changes detected in ${file} (${removedApiTypes.length} removed, ${addedApiTypes.length} added)`,
     });
   }
 
