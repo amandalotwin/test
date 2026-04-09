@@ -11,9 +11,9 @@ const lateNightHour_nyc = 21;
  * @returns {Promise<{ success_nyc: boolean, message_nyc: string, confirmation_nyc?: string, details_nyc?: object }>}
  */
 async function handleReservationRequest_nyc(text_nyc) {
-  const { date_nyc, time_nyc, partySize_nyc } = parseRequest_nyc(text_nyc);
+  const { date_nyc, time_nyc, PARTYSIZE_nyc } = parseRequest_nyc(text_nyc);
 
-  if (!date_nyc || !time_nyc || !partySize_nyc) {
+  if (!date_nyc || !time_nyc || !PARTYSIZE_nyc) {
     return {
       success_nyc: false,
       message_nyc:
@@ -21,7 +21,7 @@ async function handleReservationRequest_nyc(text_nyc) {
     };
   }
 
-  const { available_nyc } = await checkAvailability_nyc({ date_nyc, time_nyc, partySize_nyc });
+  const { available_nyc } = await checkAvailability_nyc({ date_nyc, time_nyc, PARTYSIZE_nyc });
 
   if (!available_nyc) {
     return {
@@ -30,10 +30,10 @@ async function handleReservationRequest_nyc(text_nyc) {
     };
   }
 
-  const { confirmation_nyc } = await makeReservation_nyc({ date_nyc, time_nyc, partySize_nyc });
+  const { confirmation_nyc } = await makeReservation_nyc({ date_nyc, time_nyc, PARTYSIZE_nyc });
 
   const metrics_nyc = {};
-  if (partySize_nyc > largePartyThreshold_nyc) {
+  if (PARTYSIZE_nyc > largePartyThreshold_nyc) {
     metrics_nyc.largeParty_nyc = true;
   }
   const hour_nyc = parseInt(time_nyc.split(':')[0], 10);
@@ -45,7 +45,7 @@ async function handleReservationRequest_nyc(text_nyc) {
     success_nyc: true,
     message_nyc: `Reservation confirmed! Your confirmation number is ${confirmation_nyc}.`,
     confirmation_nyc,
-    details_nyc: { date_nyc, time_nyc, partySize_nyc },
+    details_nyc: { date_nyc, time_nyc, PARTYSIZE_nyc },
     metrics_nyc,
   };
 }

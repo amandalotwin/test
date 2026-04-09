@@ -6,7 +6,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
       time_nyc: '19:00',
-      partySize_nyc: 4,
+      PARTYSIZE_nyc: 4,
     });
   });
 
@@ -15,7 +15,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: '2026-12-25',
       time_nyc: '18:30',
-      partySize_nyc: 2,
+      PARTYSIZE_nyc: 2,
     });
   });
 
@@ -24,7 +24,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: '2025-04-10',
       time_nyc: '19:00',
-      partySize_nyc: 6,
+      PARTYSIZE_nyc: 6,
     });
   });
 
@@ -33,7 +33,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: null,
       time_nyc: null,
-      partySize_nyc: null,
+      PARTYSIZE_nyc: null,
     });
   });
 
@@ -42,7 +42,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
       time_nyc: null,
-      partySize_nyc: 4,
+      PARTYSIZE_nyc: 4,
     });
   });
 
@@ -51,7 +51,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: null,
       time_nyc: '19:00',
-      partySize_nyc: 4,
+      PARTYSIZE_nyc: 4,
     });
   });
 
@@ -60,7 +60,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
       time_nyc: '19:00',
-      partySize_nyc: null,
+      PARTYSIZE_nyc: null,
     });
   });
 
@@ -70,7 +70,7 @@ describe('parseRequest_nyc', () => {
       date_nyc: '2026-12-25',
       time_nyc: '20:00',
 
-      partySize_nyc: 3,
+      PARTYSIZE_nyc: 3,
     });
   });
 
@@ -79,7 +79,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-20',
       time_nyc: '18:00',
-      partySize_nyc: 8,
+      PARTYSIZE_nyc: 8,
     });
   });
 
@@ -88,7 +88,7 @@ describe('parseRequest_nyc', () => {
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
       time_nyc: '11:00',
-      partySize_nyc: 2,
+      PARTYSIZE_nyc: 2,
     });
   });
 });

@@ -2,13 +2,13 @@
  * Parses a natural language reservation request and extracts date, time, and party size.
  *
  * @param {string} text_nyc - Natural language reservation request
- * @returns {{ date_nyc: string|null, time_nyc: string|null, partySize_nyc: number|null }}
+ * @returns {{ date_nyc: string|null, time_nyc: string|null, PARTYSIZE_nyc: number|null }}
  */
 function parseRequest_nyc(text_nyc) {
   return {
     date_nyc: parseDate_nyc(text_nyc),
     time_nyc: parseTime_nyc(text_nyc),
-    partySize_nyc: parsePartySize_nyc(text_nyc),
+    PARTYSIZE_nyc: parsePartySize_nyc(text_nyc),
   };
 }
 

@@ -15,7 +15,7 @@ describe('handleReservationRequest_nyc', () => {
     expect(result_nyc.details_nyc).toEqual({
       date_nyc: '2027-03-15',
       time_nyc: '19:00',
-      partySize_nyc: 4,
+      PARTYSIZE_nyc: 4,
     });
     expect(result_nyc.message_nyc).toContain('Reservation confirmed');
   });
