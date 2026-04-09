@@ -59,7 +59,7 @@ async function suggestAlternatives_nyc({ date_nyc, time_nyc, PARTYSIZE_nyc }) {
     if (dayOffset_nyc === 0) continue;
     const altDate_nyc = new Date(baseDate_nyc);
     altDate_nyc.setDate(altDate_nyc.getDate() + dayOffset_nyc);
-    const altDateStr_nyc = altDate_nyc.toISOString().split('T')[0];
+    const altDateStr_nyc = `${altDate_nyc.getFullYear()}-${String(altDate_nyc.getMonth() + 1).padStart(2, '0')}-${String(altDate_nyc.getDate()).padStart(2, '0')}`;
     const key_nyc = `${altDateStr_nyc}_${time_nyc}`;
     const currentCount_nyc = bookings_nyc[key_nyc] || 0;
     if (currentCount_nyc + PARTYSIZE_nyc <= capacity_nyc) {
