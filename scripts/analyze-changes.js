@@ -7,325 +7,325 @@
  *   major structural changes, API type changes, new functionality, release notes,
  *   installation instructions, comments, etc.
  *
- * Outputs JSON to stdout: { tier1: [...], tier2: [...] }
+ * Outputs JSON to stdout: { tier1_nyc: [...], tier2_nyc: [...] }
  */
 
 const { execSync } = require('child_process');
 
-function run(cmd) {
+function run_nyc(cmd_nyc) {
   try {
-    return execSync(cmd, { encoding: 'utf-8' }).trim();
+    return execSync(cmd_nyc, { encoding: 'utf-8' }).trim();
   } catch {
     return '';
   }
 }
 
-function analyzeChanges() {
-  const tier1 = [];
-  const tier2 = [];
+function analyzeChanges_nyc() {
+  const tier1_nyc = [];
+  const tier2_nyc = [];
 
   // Get list of changed files vs previous commit
-  const nameStatus = run('git diff HEAD~1 --name-status');
-  if (!nameStatus) {
+  const nameStatus_nyc = run_nyc('git diff HEAD~1 --name-status');
+  if (!nameStatus_nyc) {
     // No previous commit or no changes
-    return { tier1, tier2 };
+    return { tier1_nyc, tier2_nyc };
   }
 
-  const changedFiles = nameStatus.split('\n').filter(Boolean);
+  const changedFiles_nyc = nameStatus_nyc.split('\n').filter(Boolean);
 
-  for (const line of changedFiles) {
-    const parts = line.split('\t');
-    const status = parts[0];
-    const file = parts[parts.length - 1];
-    const oldFile = parts.length > 2 ? parts[1] : null;
+  for (const line_nyc of changedFiles_nyc) {
+    const parts_nyc = line_nyc.split('\t');
+    const status_nyc = parts_nyc[0];
+    const file_nyc = parts_nyc[parts_nyc.length - 1];
+    const oldFile_nyc = parts_nyc.length > 2 ? parts_nyc[1] : null;
 
     // ── Dependency changes (Human Review) ──
-    if (file === 'package.json' || file === 'package-lock.json') {
-      const diff = run(`git diff HEAD~1 -- "${file}"`);
-      if (diff.includes('"dependencies"') || diff.includes('"devDependencies"')) {
-        tier2.push({
+    if (file_nyc === 'package.json' || file_nyc === 'package-lock.json') {
+      const diff_nyc = run_nyc(`git diff HEAD~1 -- "${file_nyc}"`);
+      if (diff_nyc.includes('"dependencies"') || diff_nyc.includes('"devDependencies"')) {
+        tier2_nyc.push({
           type: 'dependency_change',
-          file,
-          description: `Dependencies changed in ${file}`,
+          file_nyc,
+          description: `Dependencies changed in ${file_nyc}`,
         });
       }
       continue;
     }
 
     // Only analyze source and test files
-    if (!file.startsWith('src/') && !file.startsWith('tests/')) continue;
+    if (!file_nyc.startsWith('src/') && !file_nyc.startsWith('tests/')) continue;
 
-    // ── New file = Tier 2 ──
-    if (status === 'A') {
-      tier2.push({
+    // ── New file_nyc = Tier 2 ──
+    if (status_nyc === 'A') {
+      tier2_nyc.push({
         type: 'new_file',
-        file,
-        description: `New file added: ${file}`,
+        file_nyc,
+        description: `New file_nyc added: ${file_nyc}`,
       });
       continue;
     }
 
-    // ── Deleted file = Tier 2 ──
-    if (status === 'D') {
-      tier2.push({
+    // ── Deleted file_nyc = Tier 2 ──
+    if (status_nyc === 'D') {
+      tier2_nyc.push({
         type: 'deleted_file',
-        file,
-        description: `File deleted: ${file}`,
+        file_nyc,
+        description: `File deleted: ${file_nyc}`,
       });
       continue;
     }
 
-    // ── Renamed file = Tier 1 ──
-    if (status.startsWith('R')) {
-      tier1.push({
+    // ── Renamed file_nyc = Tier 1 ──
+    if (status_nyc.startsWith('R')) {
+      tier1_nyc.push({
         type: 'file_renamed',
-        oldFile,
-        newFile: file,
-        description: `File renamed: ${oldFile} -> ${file}`,
+        oldFile_nyc,
+        newFile_nyc: file_nyc,
+        description: `File renamed: ${oldFile_nyc} -> ${file_nyc}`,
       });
       continue;
     }
 
-    // ── Modified file: analyze the diff ──
-    if (status === 'M') {
-      const diff = run(`git diff HEAD~1 -- "${file}"`);
-      analyzeDiff(file, diff, tier1, tier2);
+    // ── Modified file_nyc: analyze the diff ──
+    if (status_nyc === 'M') {
+      const diff_nyc = run_nyc(`git diff HEAD~1 -- "${file_nyc}"`);
+      analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc);
     }
   }
 
-  return { tier1, tier2 };
+  return { tier1_nyc, tier2_nyc };
 }
 
-function analyzeDiff(file, diff, tier1, tier2) {
-  const lines = diff.split('\n');
-  const addedLines = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
-  const removedLines = lines.filter((l) => l.startsWith('-') && !l.startsWith('---'));
+function analyzeDiff_nyc(file_nyc, diff_nyc, tier1_nyc, tier2_nyc) {
+  const lines_nyc = diff_nyc.split('\n');
+  const addedLines_nyc = lines_nyc.filter((l_nyc) => l_nyc.startsWith('+') && !l_nyc.startsWith('+++'));
+  const removedLines_nyc = lines_nyc.filter((l_nyc) => l_nyc.startsWith('-') && !l_nyc.startsWith('---'));
 
   // ── Detect function renames (Tier 1) ──
-  const removedFunctions = extractFunctionNames(removedLines);
-  const addedFunctions = extractFunctionNames(addedLines);
+  const removedFunctions_nyc = extractFunctionNames_nyc(removedLines_nyc);
+  const addedFunctions_nyc = extractFunctionNames_nyc(addedLines_nyc);
 
-  const removedOnly = removedFunctions.filter((f) => !addedFunctions.includes(f));
-  const addedOnly = addedFunctions.filter((f) => !removedFunctions.includes(f));
+  const removedOnly_nyc = removedFunctions_nyc.filter((f_nyc) => !addedFunctions_nyc.includes(f_nyc));
+  const addedOnly_nyc = addedFunctions_nyc.filter((f_nyc) => !removedFunctions_nyc.includes(f_nyc));
 
-  if (removedOnly.length > 0 && addedOnly.length > 0 && removedOnly.length === addedOnly.length) {
-    for (let i = 0; i < removedOnly.length; i++) {
-      tier1.push({
+  if (removedOnly_nyc.length > 0 && addedOnly_nyc.length > 0 && removedOnly_nyc.length === addedOnly_nyc.length) {
+    for (let i_nyc = 0; i_nyc < removedOnly_nyc.length; i_nyc++) {
+      tier1_nyc.push({
         type: 'function_renamed',
-        file,
-        oldName: removedOnly[i],
-        newName: addedOnly[i],
-        description: `Function renamed in ${file}: ${removedOnly[i]} -> ${addedOnly[i]}`,
+        file_nyc,
+        oldName_nyc: removedOnly_nyc[i_nyc],
+        newName_nyc: addedOnly_nyc[i_nyc],
+        description: `Function renamed in ${file_nyc}: ${removedOnly_nyc[i_nyc]} -> ${addedOnly_nyc[i_nyc]}`,
       });
     }
-  } else if (addedOnly.length > 0 && removedOnly.length === 0) {
-    for (const fn of addedOnly) {
-      tier2.push({
+  } else if (addedOnly_nyc.length > 0 && removedOnly_nyc.length === 0) {
+    for (const fn_nyc of addedOnly_nyc) {
+      tier2_nyc.push({
         type: 'new_function',
-        file,
-        name: fn,
-        description: `New function added in ${file}: ${fn}`,
+        file_nyc,
+        name_nyc: fn_nyc,
+        description: `New function added in ${file_nyc}: ${fn_nyc}`,
       });
     }
   }
 
   // ── Detect constant value changes (Tier 1) ──
-  const removedConstants = extractConstants(removedLines);
-  const addedConstants = extractConstants(addedLines);
-  for (const [name, oldVal] of Object.entries(removedConstants)) {
-    if (addedConstants[name] && addedConstants[name] !== oldVal) {
-      tier1.push({
+  const removedConstants_nyc = extractConstants_nyc(removedLines_nyc);
+  const addedConstants_nyc = extractConstants_nyc(addedLines_nyc);
+  for (const [name_nyc, oldVal_nyc] of Object.entries(removedConstants_nyc)) {
+    if (addedConstants_nyc[name_nyc] && addedConstants_nyc[name_nyc] !== oldVal_nyc) {
+      tier1_nyc.push({
         type: 'constant_changed',
-        file,
-        name,
-        oldValue: oldVal,
-        newValue: addedConstants[name],
-        description: `Constant changed in ${file}: ${name} = ${oldVal} -> ${addedConstants[name]}`,
+        file_nyc,
+        name_nyc,
+        oldValue_nyc: oldVal_nyc,
+        newValue_nyc: addedConstants_nyc[name_nyc],
+        description: `Constant changed in ${file_nyc}: ${name_nyc} = ${oldVal_nyc} -> ${addedConstants_nyc[name_nyc]}`,
       });
     }
   }
 
   // ── Detect parameter changes (Tier 1) ──
-  const removedParams = extractParams(removedLines);
-  const addedParams = extractParams(addedLines);
-  for (const [fn, oldParams] of Object.entries(removedParams)) {
-    if (addedParams[fn] && addedParams[fn] !== oldParams) {
-      tier1.push({
+  const removedParams_nyc = extractParams_nyc(removedLines_nyc);
+  const addedParams_nyc = extractParams_nyc(addedLines_nyc);
+  for (const [fn_nyc, oldParams_nyc] of Object.entries(removedParams_nyc)) {
+    if (addedParams_nyc[fn_nyc] && addedParams_nyc[fn_nyc] !== oldParams_nyc) {
+      tier1_nyc.push({
         type: 'params_changed',
-        file,
-        function: fn,
-        oldParams,
-        newParams: addedParams[fn],
-        description: `Parameters changed for ${fn} in ${file}`,
+        file_nyc,
+        function: fn_nyc,
+        oldParams_nyc,
+        newParams_nyc: addedParams_nyc[fn_nyc],
+        description: `Parameters changed for ${fn_nyc} in ${file_nyc}`,
       });
     }
   }
 
   // ── Detect field/property renames in objects (Tier 1) ──
-  const removedFields = extractObjectFields(removedLines);
-  const addedFields = extractObjectFields(addedLines);
-  const fieldRemovedOnly = removedFields.filter((f) => !addedFields.includes(f));
-  const fieldAddedOnly = addedFields.filter((f) => !removedFields.includes(f));
-  if (fieldRemovedOnly.length > 0 && fieldAddedOnly.length > 0 && fieldRemovedOnly.length === fieldAddedOnly.length) {
-    for (let i = 0; i < fieldRemovedOnly.length; i++) {
-      tier1.push({
+  const removedFields_nyc = extractObjectFields_nyc(removedLines_nyc);
+  const addedFields_nyc = extractObjectFields_nyc(addedLines_nyc);
+  const fieldRemovedOnly_nyc = removedFields_nyc.filter((f_nyc) => !addedFields_nyc.includes(f_nyc));
+  const fieldAddedOnly_nyc = addedFields_nyc.filter((f_nyc) => !removedFields_nyc.includes(f_nyc));
+  if (fieldRemovedOnly_nyc.length > 0 && fieldAddedOnly_nyc.length > 0 && fieldRemovedOnly_nyc.length === fieldAddedOnly_nyc.length) {
+    for (let i_nyc = 0; i_nyc < fieldRemovedOnly_nyc.length; i_nyc++) {
+      tier1_nyc.push({
         type: 'field_renamed',
-        file,
-        oldName: fieldRemovedOnly[i],
-        newName: fieldAddedOnly[i],
-        description: `Field renamed in ${file}: ${fieldRemovedOnly[i]} -> ${fieldAddedOnly[i]}`,
+        file_nyc,
+        oldName_nyc: fieldRemovedOnly_nyc[i_nyc],
+        newName_nyc: fieldAddedOnly_nyc[i_nyc],
+        description: `Field renamed in ${file_nyc}: ${fieldRemovedOnly_nyc[i_nyc]} -> ${fieldAddedOnly_nyc[i_nyc]}`,
       });
     }
   }
 
   // ── Detect endpoint URL changes (Tier 1) ──
-  const urlPattern = /['"`]((?:https?:\/\/|\/api\/|\/v\d+\/)\S+)['"`]/;
-  const removedUrls = removedLines
-    .map((l) => { const m = l.match(urlPattern); return m ? m[1] : null; })
+  const urlPattern_nyc = /['"`]((?:https?:\/\/|\/api\/|\/v\d+\/)\S+)['"`]/;
+  const removedUrls_nyc = removedLines_nyc
+    .map((l_nyc) => { const m_nyc = l_nyc.match(urlPattern_nyc); return m_nyc ? m_nyc[1] : null; })
     .filter(Boolean);
-  const addedUrls = addedLines
-    .map((l) => { const m = l.match(urlPattern); return m ? m[1] : null; })
+  const addedUrls_nyc = addedLines_nyc
+    .map((l_nyc) => { const m_nyc = l_nyc.match(urlPattern_nyc); return m_nyc ? m_nyc[1] : null; })
     .filter(Boolean);
-  const urlRemovedOnly = removedUrls.filter((u) => !addedUrls.includes(u));
-  const urlAddedOnly = addedUrls.filter((u) => !removedUrls.includes(u));
-  if (urlRemovedOnly.length > 0 || urlAddedOnly.length > 0) {
-    tier1.push({
+  const urlRemovedOnly_nyc = removedUrls_nyc.filter((u_nyc) => !addedUrls_nyc.includes(u_nyc));
+  const urlAddedOnly_nyc = addedUrls_nyc.filter((u_nyc) => !removedUrls_nyc.includes(u_nyc));
+  if (urlRemovedOnly_nyc.length > 0 || urlAddedOnly_nyc.length > 0) {
+    tier1_nyc.push({
       type: 'endpoint_url_changed',
-      file,
-      removedUrls: urlRemovedOnly,
-      addedUrls: urlAddedOnly,
-      description: `Endpoint URL changes in ${file} (${urlRemovedOnly.length} removed, ${urlAddedOnly.length} added)`,
+      file_nyc,
+      removedUrls_nyc: urlRemovedOnly_nyc,
+      addedUrls_nyc: urlAddedOnly_nyc,
+      description: `Endpoint URL changes in ${file_nyc} (${urlRemovedOnly_nyc.length} removed, ${urlAddedOnly_nyc.length} added)`,
     });
   }
 
   // ── Detect credential/config value changes (Tier 1) ──
-  const credentialPattern = /\b(api_key|apikey|api_token|token|secret|password|credential|auth|base_url|endpoint)\b/i;
-  const removedCreds = removedLines.filter((l) => credentialPattern.test(l));
-  const addedCreds = addedLines.filter((l) => credentialPattern.test(l));
-  if ((removedCreds.length > 0 || addedCreds.length > 0) &&
-      !(removedCreds.length === addedCreds.length && removedCreds.every((l, i) => addedCreds[i]?.substring(1) === l.substring(1)))) {
-    tier1.push({
+  const credentialPattern_nyc = /\b(api_key|apikey|api_token|token|secret|password|credential|auth|base_url|endpoint)\b/i;
+  const removedCreds_nyc = removedLines_nyc.filter((l_nyc) => credentialPattern_nyc.test(l_nyc));
+  const addedCreds_nyc = addedLines_nyc.filter((l_nyc) => credentialPattern_nyc.test(l_nyc));
+  if ((removedCreds_nyc.length > 0 || addedCreds_nyc.length > 0) &&
+      !(removedCreds_nyc.length === addedCreds_nyc.length && removedCreds_nyc.every((l_nyc, i_nyc) => addedCreds_nyc[i_nyc]?.substring(1) === l_nyc.substring(1)))) {
+    tier1_nyc.push({
       type: 'credential_config_changed',
-      file,
-      description: `Publicly available credential/config changes in ${file} (${addedCreds.length} added, ${removedCreds.length} removed)`,
+      file_nyc,
+      description: `Publicly available credential/config changes in ${file_nyc} (${addedCreds_nyc.length} added, ${removedCreds_nyc.length} removed)`,
     });
   }
 
   // ── Detect major structural changes (Human Review) ──
-  const newImports = addedLines.filter(
-    (l) => l.match(/^\+.*require\s*\(/) || l.match(/^\+.*import\s+/)
+  const newImports_nyc = addedLines_nyc.filter(
+    (l_nyc) => l_nyc.match(/^\+.*require\s*\(/) || l_nyc.match(/^\+.*import\s+/)
   );
-  const removedImports = removedLines.filter(
-    (l) => l.match(/^-.*require\s*\(/) || l.match(/^-.*import\s+/)
+  const removedImports_nyc = removedLines_nyc.filter(
+    (l_nyc) => l_nyc.match(/^-.*require\s*\(/) || l_nyc.match(/^-.*import\s+/)
   );
-  if (newImports.length > 2 || removedImports.length > 2) {
-    tier2.push({
+  if (newImports_nyc.length > 2 || removedImports_nyc.length > 2) {
+    tier2_nyc.push({
       type: 'major_structural_change',
-      file,
-      description: `Major import/require changes in ${file} (${newImports.length} added, ${removedImports.length} removed) — may require customer-side updates`,
+      file_nyc,
+      description: `Major import/require changes in ${file_nyc} (${newImports_nyc.length} added, ${removedImports_nyc.length} removed) — may require customer-side updates`,
     });
   }
 
   // ── Detect API type changes e.g. SOAP to REST (Human Review) ──
-  const apiTypePattern = /\b(soap|restful|rest(?:\s*api)?|graphql|grpc|websocket|xml-rpc|json-rpc)\b/i;
-  const removedApiTypes = removedLines.filter((l) => apiTypePattern.test(l));
-  const addedApiTypes = addedLines.filter((l) => apiTypePattern.test(l));
-  if (removedApiTypes.length > 0 && addedApiTypes.length > 0) {
-    tier2.push({
+  const apiTypePattern_nyc = /\b(soap|restful|rest(?:\s*api)?|graphql|grpc|websocket|xml-rpc|json-rpc)\b/i;
+  const removedApiTypes_nyc = removedLines_nyc.filter((l_nyc) => apiTypePattern_nyc.test(l_nyc));
+  const addedApiTypes_nyc = addedLines_nyc.filter((l_nyc) => apiTypePattern_nyc.test(l_nyc));
+  if (removedApiTypes_nyc.length > 0 && addedApiTypes_nyc.length > 0) {
+    tier2_nyc.push({
       type: 'api_type_change',
-      file,
-      description: `API type/protocol changes detected in ${file} (${removedApiTypes.length} removed, ${addedApiTypes.length} added)`,
+      file_nyc,
+      description: `API type/protocol changes detected in ${file_nyc} (${removedApiTypes_nyc.length} removed, ${addedApiTypes_nyc.length} added)`,
     });
   }
 
   // ── Detect metrics-related changes (Human Review) ──
-  const metricsPattern = /^\+.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i;
-  const metricsLines = addedLines.filter((l) => metricsPattern.test(l));
-  const removedMetricsLines = removedLines.filter((l) =>
-    /^-.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i.test(l)
+  const metricsPattern_nyc = /^\+.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i;
+  const metricsLines_nyc = addedLines_nyc.filter((l_nyc) => metricsPattern_nyc.test(l_nyc));
+  const removedMetricsLines_nyc = removedLines_nyc.filter((l_nyc) =>
+    /^-.*\b(metric|metrics|kpi|kpis|measure|measurement|outcome|outcomes|goal|goals|target|targets|benchmark|conversion|retention|churn|revenue|arpu|ltv|ctr|engagement|funnel|analytics|tracking|telemetry)\b/i.test(l_nyc)
   );
-  if (metricsLines.length > 0 || removedMetricsLines.length > 0) {
-    tier2.push({
+  if (metricsLines_nyc.length > 0 || removedMetricsLines_nyc.length > 0) {
+    tier2_nyc.push({
       type: 'metrics_change',
-      file,
-      description: `Metrics-related changes in ${file} (${metricsLines.length} added, ${removedMetricsLines.length} removed)`,
+      file_nyc,
+      description: `Metrics-related changes in ${file_nyc} (${metricsLines_nyc.length} added, ${removedMetricsLines_nyc.length} removed)`,
     });
   }
 
   // ── Comment-only changes = Tier 2 ──
-  const commentPattern = /^[+-]\s*(\/\/|\/\*|\*)/;
-  const nonCommentAdded = addedLines.filter((l) => !commentPattern.test(l));
-  const nonCommentRemoved = removedLines.filter((l) => !commentPattern.test(l));
-  const commentAdded = addedLines.filter((l) => commentPattern.test(l));
+  const commentPattern_nyc = /^[+-]\s*(\/\/|\/\*|\*)/;
+  const nonCommentAdded_nyc = addedLines_nyc.filter((l_nyc) => !commentPattern_nyc.test(l_nyc));
+  const nonCommentRemoved_nyc = removedLines_nyc.filter((l_nyc) => !commentPattern_nyc.test(l_nyc));
+  const commentAdded_nyc = addedLines_nyc.filter((l_nyc) => commentPattern_nyc.test(l_nyc));
 
-  if (commentAdded.length > 0 && nonCommentAdded.length === 0 && nonCommentRemoved.length === 0) {
-    tier2.push({
+  if (commentAdded_nyc.length > 0 && nonCommentAdded_nyc.length === 0 && nonCommentRemoved_nyc.length === 0) {
+    tier2_nyc.push({
       type: 'comments_changed',
-      file,
-      description: `Comments updated in ${file}`,
+      file_nyc,
+      description: `Comments updated in ${file_nyc}`,
     });
     return; // Don't also flag as significant change
   }
 
   // ── Large changes without clear rename = Tier 2 ──
-  const alreadyCategorized = tier1.some((t) => t.file === file) || tier2.some((t) => t.file === file);
-  if (!alreadyCategorized && addedLines.length > 20) {
-    tier2.push({
+  const alreadyCategorized_nyc = tier1_nyc.some((t_nyc) => t_nyc.file_nyc === file_nyc) || tier2_nyc.some((t_nyc) => t_nyc.file_nyc === file_nyc);
+  if (!alreadyCategorized_nyc && addedLines_nyc.length > 20) {
+    tier2_nyc.push({
       type: 'significant_change',
-      file,
-      linesAdded: addedLines.length,
-      linesRemoved: removedLines.length,
-      description: `Significant changes in ${file} (+${addedLines.length}/-${removedLines.length} lines)`,
+      file_nyc,
+      linesAdded_nyc: addedLines_nyc.length,
+      linesRemoved_nyc: removedLines_nyc.length,
+      description: `Significant changes in ${file_nyc} (+${addedLines_nyc.length}/-${removedLines_nyc.length} lines)`,
     });
   }
 }
 
 // ── Extraction helpers ──
 
-function extractFunctionNames(lines) {
-  const names = new Set();
-  for (const line of lines) {
-    const fnMatch = line.match(/^[+-]\s*(?:async\s+)?function\s+(\w+)/);
-    if (fnMatch) names.add(fnMatch[1]);
+function extractFunctionNames_nyc(lines_nyc) {
+  const names_nyc = new Set();
+  for (const line_nyc of lines_nyc) {
+    const fnMatch_nyc = line_nyc.match(/^[+-]\s*(?:async\s+)?function\s+(\w+)/);
+    if (fnMatch_nyc) names_nyc.add(fnMatch_nyc[1]);
 
-    const arrowMatch = line.match(/^[+-]\s*(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(/);
-    if (arrowMatch) names.add(arrowMatch[1]);
+    const arrowMatch_nyc = line_nyc.match(/^[+-]\s*(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(/);
+    if (arrowMatch_nyc) names_nyc.add(arrowMatch_nyc[1]);
   }
-  return [...names];
+  return [...names_nyc];
 }
 
-function extractConstants(lines) {
-  const constants = {};
-  for (const line of lines) {
+function extractConstants_nyc(lines_nyc) {
+  const constants_nyc = {};
+  for (const line_nyc of lines_nyc) {
     // Only match module-level constants (no indentation beyond the diff prefix)
-    const match = line.match(/^[+-]const\s+([a-zA-Z_]\w*)\s*=\s*(.+?)\s*;/);
-    if (match) constants[match[1]] = match[2];
+    const match_nyc = line_nyc.match(/^[+-]const\s+([a-zA-Z_]\w*)\s*=\s*(.+?)\s*;/);
+    if (match_nyc) constants_nyc[match_nyc[1]] = match_nyc[2];
   }
-  return constants;
+  return constants_nyc;
 }
 
-function extractParams(lines) {
-  const params = {};
-  for (const line of lines) {
-    const match = line.match(/^[+-]\s*(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/);
-    if (match) params[match[1]] = match[2].trim();
+function extractParams_nyc(lines_nyc) {
+  const params_nyc = {};
+  for (const line_nyc of lines_nyc) {
+    const match_nyc = line_nyc.match(/^[+-]\s*(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/);
+    if (match_nyc) params_nyc[match_nyc[1]] = match_nyc[2].trim();
   }
-  return params;
+  return params_nyc;
 }
 
-function extractObjectFields(lines) {
-  const fields = new Set();
-  for (const line of lines) {
+function extractObjectFields_nyc(lines_nyc) {
+  const fields_nyc = new Set();
+  for (const line_nyc of lines_nyc) {
     // Match object property patterns: key: value or key,
-    const match = line.match(/^[+-]\s+(\w+)\s*[:,]/);
-    if (match && !['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while'].includes(match[1])) {
-      fields.add(match[1]);
+    const match_nyc = line_nyc.match(/^[+-]\s+(\w+)\s*[:,]/);
+    if (match_nyc && !['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while'].includes(match_nyc[1])) {
+      fields_nyc.add(match_nyc[1]);
     }
   }
-  return [...fields];
+  return [...fields_nyc];
 }
 
 // ── Main ──
 
-const result = analyzeChanges();
-console.log(JSON.stringify(result, null, 2));
+const result_nyc = analyzeChanges_nyc();
+console.log(JSON.stringify(result_nyc, null, 2));

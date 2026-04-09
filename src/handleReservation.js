@@ -1,53 +1,53 @@
-const { parseRequest } = require('./parseRequest');
-const { checkAvailability, makeReservation } = require('./mockApi');
+const { parseRequest_nyc } = require('./parseRequest');
+const { checkAvailability_nyc, makeReservation_nyc } = require('./mockApi');
 
-const largePartyThreshold = 6;
-const lateNightHour = 21;
+const largePartyThreshold_nyc = 6;
+const lateNightHour_nyc = 21;
 
 /**
  * Orchestrates a reservation request from natural language text.
  *
- * @param {string} text - Natural language reservation request
- * @returns {Promise<{ success: boolean, message: string, confirmation?: string, details?: object }>}
+ * @param {string} text_nyc - Natural language reservation request
+ * @returns {Promise<{ success_nyc: boolean, message_nyc: string, confirmation_nyc?: string, details_nyc?: object }>}
  */
-async function handleReservationRequest(text) {
-  const { date, time, partySize } = parseRequest(text);
+async function handleReservationRequest_nyc(text_nyc) {
+  const { date_nyc, time_nyc, partySize_nyc } = parseRequest_nyc(text_nyc);
 
-  if (!date || !time || !partySize) {
+  if (!date_nyc || !time_nyc || !partySize_nyc) {
     return {
-      success: false,
-      message:
+      success_nyc: false,
+      message_nyc:
         'Could not understand your reservation request. Please include a date, time, and party size.',
     };
   }
 
-  const { available } = await checkAvailability({ date, time, partySize });
+  const { available_nyc } = await checkAvailability_nyc({ date_nyc, time_nyc, partySize_nyc });
 
-  if (!available) {
+  if (!available_nyc) {
     return {
-      success: false,
-      message: 'Sorry, that time slot is not available. Please try a different date or time.',
+      success_nyc: false,
+      message_nyc: 'Sorry, that time slot is not available. Please try a different date or time.',
     };
   }
 
-  const { confirmation } = await makeReservation({ date, time, partySize });
+  const { confirmation_nyc } = await makeReservation_nyc({ date_nyc, time_nyc, partySize_nyc });
 
-  const metrics = {};
-  if (partySize > largePartyThreshold) {
-    metrics.largeParty = true;
+  const metrics_nyc = {};
+  if (partySize_nyc > largePartyThreshold_nyc) {
+    metrics_nyc.largeParty_nyc = true;
   }
-  const hour = parseInt(time.split(':')[0], 10);
-  if (hour >= lateNightHour) {
-    metrics.lateNight = true;
+  const hour_nyc = parseInt(time_nyc.split(':')[0], 10);
+  if (hour_nyc >= lateNightHour_nyc) {
+    metrics_nyc.lateNight_nyc = true;
   }
 
   return {
-    success: true,
-    message: `Reservation confirmed! Your confirmation number is ${confirmation}.`,
-    confirmation,
-    details: { date, time, partySize },
-    metrics,
+    success_nyc: true,
+    message_nyc: `Reservation confirmed! Your confirmation number is ${confirmation_nyc}.`,
+    confirmation_nyc,
+    details_nyc: { date_nyc, time_nyc, partySize_nyc },
+    metrics_nyc,
   };
 }
 
-module.exports = { handleReservationRequest };
+module.exports = { handleReservationRequest_nyc };
