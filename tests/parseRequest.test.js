@@ -5,7 +5,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('table for 4 on March 15 at 7pm');
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
   });
@@ -14,7 +14,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('reservation for 2 people, 2026-12-25, 6:30 PM');
     expect(result_nyc).toEqual({
       date_nyc: '2026-12-25',
-      time_nyc: '18:30',
+      start_time_nyc: '18:30',
       PARTY_SIZE_nyc: 2,
     });
   });
@@ -23,7 +23,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('Book a table for 6 on 2025-04-10 at 19:00');
     expect(result_nyc).toEqual({
       date_nyc: '2025-04-10',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 6,
     });
   });
@@ -32,7 +32,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('hello world');
     expect(result_nyc).toEqual({
       date_nyc: null,
-      time_nyc: null,
+      start_time_nyc: null,
       PARTY_SIZE_nyc: null,
     });
   });
@@ -41,7 +41,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('table for 4 on March 15');
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
-      time_nyc: null,
+      start_time_nyc: null,
       PARTY_SIZE_nyc: 4,
     });
   });
@@ -50,7 +50,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('table for 4 at 7pm');
     expect(result_nyc).toEqual({
       date_nyc: null,
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
   });
@@ -59,7 +59,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('March 15 at 7pm');
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: null,
     });
   });
@@ -68,7 +68,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('table for 3 on 12/25 at 8pm');
     expect(result_nyc).toEqual({
       date_nyc: '2026-12-25',
-      time_nyc: '20:00',
+      start_time_nyc: '20:00',
 
       PARTY_SIZE_nyc: 3,
     });
@@ -78,7 +78,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('party of 8 on March 20 at 6pm');
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-20',
-      time_nyc: '18:00',
+      start_time_nyc: '18:00',
       PARTY_SIZE_nyc: 8,
     });
   });
@@ -87,7 +87,7 @@ describe('parse_request_nyc', () => {
     const result_nyc = parse_request_nyc('table for 2 on March 15 at 11am');
     expect(result_nyc).toEqual({
       date_nyc: '2027-03-15',
-      time_nyc: '11:00',
+      start_time_nyc: '11:00',
       PARTY_SIZE_nyc: 2,
     });
   });

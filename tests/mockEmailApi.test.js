@@ -10,7 +10,7 @@ describe('send_confirmation_email_nyc', () => {
       to_nyc: 'guest@example.com',
       confirmation_nyc: 'RES-ABC12',
       date_nyc: '2026-12-25',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
     expect(result_nyc.success_nyc).toBe(true);
@@ -22,7 +22,7 @@ describe('send_confirmation_email_nyc', () => {
       to_nyc: 'guest@example.com',
       confirmation_nyc: 'RES-ABC12',
       date_nyc: '2026-12-25',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
     const emails_nyc = get_sent_emails_nyc();
@@ -41,7 +41,7 @@ describe('send_confirmation_email_nyc', () => {
       to_nyc: '',
       confirmation_nyc: 'RES-ABC12',
       date_nyc: '2026-12-25',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
     expect(result_nyc.success_nyc).toBe(false);
@@ -53,7 +53,7 @@ describe('send_confirmation_email_nyc', () => {
       to_nyc: 'not-an-email',
       confirmation_nyc: 'RES-ABC12',
       date_nyc: '2026-12-25',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
     expect(result_nyc.success_nyc).toBe(false);
@@ -65,14 +65,14 @@ describe('send_confirmation_email_nyc', () => {
       to_nyc: 'a@example.com',
       confirmation_nyc: 'RES-001',
       date_nyc: '2026-12-25',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 2,
     });
     await send_confirmation_email_nyc({
       to_nyc: 'b@example.com',
       confirmation_nyc: 'RES-002',
       date_nyc: '2026-12-26',
-      time_nyc: '20:00',
+      start_time_nyc: '20:00',
       PARTY_SIZE_nyc: 6,
     });
     const emails_nyc = get_sent_emails_nyc();
@@ -86,7 +86,7 @@ describe('send_confirmation_email_nyc', () => {
       to_nyc: 'guest@example.com',
       confirmation_nyc: 'RES-ABC12',
       date_nyc: '2026-12-25',
-      time_nyc: '19:00',
+      start_time_nyc: '19:00',
       PARTY_SIZE_nyc: 4,
     });
     expect(get_sent_emails_nyc().length).toBe(1);

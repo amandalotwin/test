@@ -207,7 +207,7 @@ function extract_names_nyc(parse_request_src_nyc, mock_api_src_nyc, handle_reser
   // Use non-greedy match and limit to first return block (the one inside the main function)
   const return_match_nyc = parse_request_src_nyc.match(/return\s*\{\s*(\w+)\s*:[^,]+,\s*(\w+)\s*:[^,]+,\s*(\w+)\s*:/);
   const date_field_nyc = return_match_nyc ? return_match_nyc[1] : 'date';
-  const time_field_nyc = return_match_nyc ? return_match_nyc[2] : 'time';
+  const time_field_nyc = return_match_nyc ? return_match_nyc[2] : 'start_time_nyc';
   const party_size_field_nyc = return_match_nyc ? return_match_nyc[3] : 'partySize';
 
   // Extract capacity value from mockApi (first const with a number value)
