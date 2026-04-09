@@ -70,14 +70,14 @@ jobs:
           echo "Devin Automatic changes detected — auto-updating Notion page..."
           node scripts/sync-notion.js
 
-  # ── Human Review: Create a review PR with proposed documentation ──
-  review-pr:
+  # ── Human Review: Auto-update Notion AND create a review issue ──
+  review-sync:
     needs: analyze
     if: needs.analyze.outputs.has_tier2 == 'true' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,38 +87,49 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Auto-sync design spec to Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
+        run: |
+          echo "Tier 2 changes detected — auto-updating Notion page..."
+          node scripts/sync-notion.js
+
       - name: Download analysis
         uses: actions/download-artifact@v4
         with:
           name: analysis
           path: /tmp
 
-      - name: Generate review draft
+      - name: Create review issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node scripts/generate-review.js /tmp/analysis.json
-          echo "--- Proposed updates ---"
-          cat docs/proposed-notion-updates.md
+          CHANGES=$(cat /tmp/analysis.json | node -e "
+            const d=require('fs').readFileSync('/dev/stdin','utf-8');
+            const a=JSON.parse(d);
+            const lines=a.tier2.map(c => '- **' + c.type + '**: ' + c.description);
+            console.log(lines.join('\n'));
+          ")
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          gh issue create \
+            --title "Notion doc updated: please review (${{ github.event.head_commit.timestamp || github.run_id }})" \
+            --label "documentation" \
+            --body "## Notion Documentation Auto-Updated — Review Needed
 
-      - name: Create review PR
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'docs: proposed Notion documentation updates'
-          title: 'docs: Notion documentation update needs review'
-          body: |
-            This PR was auto-generated because code changes were detected that need
-            human review before updating the Notion design spec page.
+          The Notion design spec page has been automatically updated with the following changes. Please review the Notion page to ensure the updates are accurate.
 
-            **Please review `docs/proposed-notion-updates.md` for details.**
+          ### Changes detected
+          ${CHANGES}
 
-            This includes changes related to: metrics, dependencies, new functionality,
-            structural changes, API type changes, release notes, and more.
+          ### What to do
+          1. Open the Notion design spec page and review the updated sections
+          2. If anything looks wrong, trigger a manual re-sync from the Actions tab or edit the Notion page directly
+          3. Close this issue once reviewed
 
-            Once you merge this PR, update the Notion page manually or trigger
-            a full sync via workflow_dispatch.
-          branch: docs/notion-review
-          delete-branch: true
-          labels: documentation,needs-review
+          ### Commit
+          [\`${SHORT_SHA}\`](${{ github.server_url }}/${{ github.repository }}/commit/${COMMIT_SHA})"
 
   # ── Fallback: Full sync on manual trigger ──
   full-sync:
