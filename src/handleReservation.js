@@ -1,5 +1,6 @@
 const { parse_request_nyc } = require('./parseRequest');
 const { check_availability_nyc, make_reservation_nyc, suggest_alternatives_nyc } = require('./mockApi');
+const { send_confirmation_email_nyc } = require('./mockEmailApi');
 
 const large_party_threshold_nyc = 6;
 const happy_hour_start_nyc = 17;
@@ -12,9 +13,10 @@ const brunch_end_nyc = 13;
  * Orchestrates a reservation request from natural language text.
  *
  * @param {string} text_nyc - Natural language reservation request
- * @returns {Promise<{ success_nyc: boolean, message_nyc: string, confirmation_nyc?: string, details_nyc?: object }>}
+ * @param {{ email_nyc?: string }} options_nyc - Optional settings (e.g. guest email for confirmation)
+ * @returns {Promise<{ success_nyc: boolean, message_nyc: string, confirmation_nyc?: string, details_nyc?: object, email_sent_nyc?: boolean }>}
  */
-async function handle_reservation_request_nyc(text_nyc) {
+async function handle_reservation_request_nyc(text_nyc, options_nyc = {}) {
   const { date_nyc, time_nyc, PARTY_SIZE_nyc } = parse_request_nyc(text_nyc);
 
   if (!date_nyc || !time_nyc || !PARTY_SIZE_nyc) {
@@ -63,12 +65,25 @@ async function handle_reservation_request_nyc(text_nyc) {
     metrics_nyc.late_night_nyc = true;
   }
 
+  let email_sent_nyc = false;
+  if (options_nyc.email_nyc) {
+    const email_result_nyc = await send_confirmation_email_nyc({
+      to_nyc: options_nyc.email_nyc,
+      confirmation_nyc,
+      date_nyc,
+      time_nyc,
+      PARTY_SIZE_nyc,
+    });
+    email_sent_nyc = email_result_nyc.success_nyc;
+  }
+
   return {
     success_nyc: true,
     message_nyc: `Reservation confirmed! Your confirmation number is ${confirmation_nyc}.`,
     confirmation_nyc,
     details_nyc: { date_nyc, time_nyc, PARTY_SIZE_nyc },
     metrics_nyc,
+    email_sent_nyc,
   };
 }
 
