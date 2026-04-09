@@ -251,7 +251,7 @@ function extractFunctionNames(lines) {
 function extractConstants(lines) {
   const constants = {};
   for (const line of lines) {
-    const match = line.match(/^[+-]\s*const\s+([A-Z_][A-Z_0-9]*)\s*=\s*(.+?)\s*;/);
+    const match = line.match(/^[+-]\s*const\s+([a-zA-Z_]\w*)\s*=\s*(.+?)\s*;/);
     if (match) constants[match[1]] = match[2];
   }
   return constants;
