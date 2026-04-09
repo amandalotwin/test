@@ -587,6 +587,10 @@ function buildPageBlocks() {
 // ─── Main ────────────────────────────────────────────────────────────
 
 async function main() {
+  console.log('Building new page content from source files...');
+  const blocks = buildPageBlocks();
+  console.log(`Generated ${blocks.length} blocks.`);
+
   console.log('Fetching existing blocks from Notion page...');
   const existingBlocks = await getChildBlocks(NOTION_PAGE_ID);
   console.log(`Found ${existingBlocks.length} existing blocks. Deleting...`);
@@ -594,11 +598,7 @@ async function main() {
   for (const block of existingBlocks) {
     await deleteBlock(block.id);
   }
-  console.log('Existing blocks deleted.');
-
-  console.log('Building new page content from source files...');
-  const blocks = buildPageBlocks();
-  console.log(`Generated ${blocks.length} blocks. Appending to Notion page...`);
+  console.log('Existing blocks deleted. Appending new content...');
 
   await appendChildren(NOTION_PAGE_ID, blocks);
   console.log('Notion page updated successfully!');
