@@ -1,7 +1,7 @@
-const { parse_request } = require('./parseRequest');
-const { check_availability, make_reservation } = require('./mockApi');
+const { parseRequest } = require('./parseRequest');
+const { checkAvailability, makeReservation } = require('./mockApi');
 
-const large_party_threshold = 6;
+const largePartyThreshold = 6;
 
 /**
  * Orchestrates a reservation request from natural language text.
@@ -9,10 +9,10 @@ const large_party_threshold = 6;
  * @param {string} text - Natural language reservation request
  * @returns {Promise<{ success: boolean, message: string, confirmation?: string, details?: object }>}
  */
-async function handle_reservation_request(text) {
-  const { date, time, party_size } = parse_request(text);
+async function handleReservationRequest(text) {
+  const { date, time, partySize } = parseRequest(text);
 
-  if (!date || !time || !party_size) {
+  if (!date || !time || !partySize) {
     return {
       success: false,
       message:
@@ -20,7 +20,7 @@ async function handle_reservation_request(text) {
     };
   }
 
-  const { available } = await check_availability({ date, time, party_size });
+  const { available } = await checkAvailability({ date, time, partySize });
 
   if (!available) {
     return {
@@ -29,20 +29,20 @@ async function handle_reservation_request(text) {
     };
   }
 
-  const { confirmation } = await make_reservation({ date, time, party_size });
+  const { confirmation } = await makeReservation({ date, time, partySize });
 
   const metrics = {};
-  if (party_size > large_party_threshold) {
-    metrics.large_party = true;
+  if (partySize > largePartyThreshold) {
+    metrics.largeParty = true;
   }
 
   return {
     success: true,
     message: `Reservation confirmed! Your confirmation number is ${confirmation}.`,
     confirmation,
-    details: { date, time, party_size },
+    details: { date, time, partySize },
     metrics,
   };
 }
 
-module.exports = { handle_reservation_request };
+module.exports = { handleReservationRequest };
