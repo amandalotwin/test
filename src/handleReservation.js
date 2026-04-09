@@ -1,5 +1,5 @@
 const { parseRequest_nyc } = require('./parseRequest');
-const { checkAvailability_nyc, makeReservation_nyc } = require('./mockApi');
+const { checkAvailability_nyc, makeReservation_nyc, suggestAlternatives_nyc } = require('./mockApi');
 
 const largePartyThreshold_nyc = 6;
 const happyHourStart_nyc = 17;
@@ -28,9 +28,21 @@ async function handleReservationRequest_nyc(text_nyc) {
   const { available_nyc } = await checkAvailability_nyc({ date_nyc, time_nyc, PARTYSIZE_nyc });
 
   if (!available_nyc) {
+    const alternatives_nyc = await suggestAlternatives_nyc({ date_nyc, time_nyc, PARTYSIZE_nyc });
+    if (alternatives_nyc.length > 0) {
+      const suggestionList_nyc = alternatives_nyc
+        .slice(0, 5)
+        .map((s_nyc) => `${s_nyc.date_nyc} at ${s_nyc.time_nyc}`)
+        .join(', ');
+      return {
+        success_nyc: false,
+        message_nyc: `Sorry, that time slot is not available. Here are some alternatives: ${suggestionList_nyc}`,
+        alternatives_nyc: alternatives_nyc.slice(0, 5),
+      };
+    }
     return {
       success_nyc: false,
-      message_nyc: 'Sorry, that time slot is not available. Please try a different date or time.',
+      message_nyc: 'Sorry, that time slot is not available and no nearby alternatives were found. Please try a different date or time.',
     };
   }
 
