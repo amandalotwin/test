@@ -1,4 +1,4 @@
-const { handleReservationRequest_nyc } = require('./handleReservation');
+const { handle_reservation_request_nyc } = require('./handleReservation');
 
 const examples_nyc = [
   "I'd like a table for 4 on March 15th at 7pm",
@@ -10,7 +10,7 @@ const examples_nyc = [
 async function main_nyc() {
   for (const text_nyc of examples_nyc) {
     console.log(`\nRequest: "${text_nyc}"`);
-    const result_nyc = await handleReservationRequest_nyc(text_nyc);
+    const result_nyc = await handle_reservation_request_nyc(text_nyc);
     console.log('Result:', JSON.stringify(result_nyc, null, 2));
   }
 }

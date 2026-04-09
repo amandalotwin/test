@@ -13,7 +13,7 @@
 const fs_nyc = require('fs');
 const path_nyc = require('path');
 
-function readAnalysis_nyc() {
+function read_analysis_nyc() {
   // Read from file argument or stdin
   if (process.argv[2]) {
     return JSON.parse(fs_nyc.readFileSync(process.argv[2], 'utf-8'));
@@ -21,57 +21,57 @@ function readAnalysis_nyc() {
   return JSON.parse(fs_nyc.readFileSync('/dev/stdin', 'utf-8'));
 }
 
-function generateSourceSnippet_nyc(file_nyc, functionName_nyc) {
-  const filePath_nyc = path_nyc.resolve(__dirname, '..', file_nyc);
-  if (!fs_nyc.existsSync(filePath_nyc)) return null;
+function generate_source_snippet_nyc(file_nyc, function_name_nyc) {
+  const file_path_nyc = path_nyc.resolve(__dirname, '..', file_nyc);
+  if (!fs_nyc.existsSync(file_path_nyc)) return null;
 
-  const src_nyc = fs_nyc.readFileSync(filePath_nyc, 'utf-8');
+  const src_nyc = fs_nyc.readFileSync(file_path_nyc, 'utf-8');
 
-  if (!functionName_nyc) return null;
+  if (!function_name_nyc) return null;
 
   // Extract the function body (simple heuristic)
-  const fnRegex_nyc = new RegExp(
-    `(?:async\\s+)?function\\s+${functionName_nyc}\\s*\\([^)]*\\)\\s*\\{`,
+  const fn_regex_nyc = new RegExp(
+    `(?:async\\s+)?function\\s+${function_name_nyc}\\s*\\([^)]*\\)\\s*\\{`,
     'm'
   );
-  const match_nyc = src_nyc.match(fnRegex_nyc);
+  const match_nyc = src_nyc.match(fn_regex_nyc);
   if (!match_nyc) return null;
 
-  const startIdx_nyc = match_nyc.index;
-  let braceCount_nyc = 0;
-  let endIdx_nyc = startIdx_nyc;
+  const start_idx_nyc = match_nyc.index;
+  let brace_count_nyc = 0;
+  let end_idx_nyc = start_idx_nyc;
   let started_nyc = false;
 
-  for (let i_nyc = startIdx_nyc; i_nyc < src_nyc.length; i_nyc++) {
+  for (let i_nyc = start_idx_nyc; i_nyc < src_nyc.length; i_nyc++) {
     if (src_nyc[i_nyc] === '{') {
-      braceCount_nyc++;
+      brace_count_nyc++;
       started_nyc = true;
     } else if (src_nyc[i_nyc] === '}') {
-      braceCount_nyc--;
+      brace_count_nyc--;
     }
-    if (started_nyc && braceCount_nyc === 0) {
-      endIdx_nyc = i_nyc + 1;
+    if (started_nyc && brace_count_nyc === 0) {
+      end_idx_nyc = i_nyc + 1;
       break;
     }
   }
 
-  return src_nyc.slice(startIdx_nyc, endIdx_nyc);
+  return src_nyc.slice(start_idx_nyc, end_idx_nyc);
 }
 
-function extractFunctionSignature_nyc(file_nyc, functionName_nyc) {
-  const filePath_nyc = path_nyc.resolve(__dirname, '..', file_nyc);
-  if (!fs_nyc.existsSync(filePath_nyc)) return null;
+function extract_function_signature_nyc(file_nyc, function_name_nyc) {
+  const file_path_nyc = path_nyc.resolve(__dirname, '..', file_nyc);
+  if (!fs_nyc.existsSync(file_path_nyc)) return null;
 
-  const src_nyc = fs_nyc.readFileSync(filePath_nyc, 'utf-8');
-  const fnRegex_nyc = new RegExp(
-    `(?:async\\s+)?function\\s+${functionName_nyc}\\s*\\([^)]*\\)`,
+  const src_nyc = fs_nyc.readFileSync(file_path_nyc, 'utf-8');
+  const fn_regex_nyc = new RegExp(
+    `(?:async\\s+)?function\\s+${function_name_nyc}\\s*\\([^)]*\\)`,
     'm'
   );
-  const match_nyc = src_nyc.match(fnRegex_nyc);
+  const match_nyc = src_nyc.match(fn_regex_nyc);
   return match_nyc ? match_nyc[0] : null;
 }
 
-function generateReviewDraft_nyc(analysis_nyc) {
+function generate_review_draft_nyc(analysis_nyc) {
   const { tier2_nyc } = analysis_nyc;
   const lines_nyc = [];
 
@@ -87,12 +87,12 @@ function generateReviewDraft_nyc(analysis_nyc) {
     lines_nyc.push('');
 
     // Group by type
-    const newFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_file');
-    const deletedFiles_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'deleted_file');
-    const newFunctions_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_function');
-    const commentChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'comments_changed');
-    const significantChanges_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'significant_change');
-    const flaggedChanges_nyc = tier2_nyc.filter(
+    const new_files_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_file');
+    const deleted_files_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'deleted_file');
+    const new_functions_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'new_function');
+    const comment_changes_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'comments_changed');
+    const significant_changes_nyc = tier2_nyc.filter((c_nyc) => c_nyc.type === 'significant_change');
+    const flagged_changes_nyc = tier2_nyc.filter(
       (c_nyc) =>
         c_nyc.type === 'dependency_change' ||
         c_nyc.type === 'major_structural_change' ||
@@ -100,30 +100,30 @@ function generateReviewDraft_nyc(analysis_nyc) {
         c_nyc.type === 'metrics_change'
     );
 
-    if (newFiles_nyc.length > 0) {
+    if (new_files_nyc.length > 0) {
       lines_nyc.push('### New Files');
       lines_nyc.push('');
       lines_nyc.push('The following new files were added and need documentation:');
       lines_nyc.push('');
-      for (const change_nyc of newFiles_nyc) {
+      for (const change_nyc of new_files_nyc) {
         lines_nyc.push(`#### \`${change_nyc.file_nyc}\``);
         lines_nyc.push('');
 
         // Try to read the file and extract exports
-        const filePath_nyc = path_nyc.resolve(__dirname, '..', change_nyc.file_nyc);
-        if (fs_nyc.existsSync(filePath_nyc)) {
-          const src_nyc = fs_nyc.readFileSync(filePath_nyc, 'utf-8');
+        const file_path_nyc = path_nyc.resolve(__dirname, '..', change_nyc.file_nyc);
+        if (fs_nyc.existsSync(file_path_nyc)) {
+          const src_nyc = fs_nyc.readFileSync(file_path_nyc, 'utf-8');
 
           // Extract module.exports
-          const exportsMatch_nyc = src_nyc.match(/module\.exports\s*=\s*\{([^}]+)\}/);
-          if (exportsMatch_nyc) {
-            const exports_nyc = exportsMatch_nyc[1]
+          const exports_match_nyc = src_nyc.match(/module\.exports\s*=\s*\{([^}]+)\}/);
+          if (exports_match_nyc) {
+            const exports_nyc = exports_match_nyc[1]
               .split(',')
               .map((e_nyc) => e_nyc.trim())
               .filter(Boolean);
             lines_nyc.push('**Exported functions:**');
             for (const exp_nyc of exports_nyc) {
-              const sig_nyc = extractFunctionSignature_nyc(change_nyc.file_nyc, exp_nyc);
+              const sig_nyc = extract_function_signature_nyc(change_nyc.file_nyc, exp_nyc);
               lines_nyc.push(`- \`${sig_nyc || exp_nyc}\``);
             }
             lines_nyc.push('');
@@ -148,28 +148,28 @@ function generateReviewDraft_nyc(analysis_nyc) {
       }
     }
 
-    if (deletedFiles_nyc.length > 0) {
+    if (deleted_files_nyc.length > 0) {
       lines_nyc.push('### Deleted Files');
       lines_nyc.push('');
       lines_nyc.push('The following files were removed. Their documentation sections should be removed or archived:');
       lines_nyc.push('');
-      for (const change_nyc of deletedFiles_nyc) {
+      for (const change_nyc of deleted_files_nyc) {
         lines_nyc.push(`- \`${change_nyc.file_nyc}\``);
       }
       lines_nyc.push('');
     }
 
-    if (newFunctions_nyc.length > 0) {
+    if (new_functions_nyc.length > 0) {
       lines_nyc.push('### New Functions');
       lines_nyc.push('');
       lines_nyc.push('The following new functions were added and need documentation:');
       lines_nyc.push('');
-      for (const change_nyc of newFunctions_nyc) {
-        const sig_nyc = extractFunctionSignature_nyc(change_nyc.file_nyc, change_nyc.name_nyc);
+      for (const change_nyc of new_functions_nyc) {
+        const sig_nyc = extract_function_signature_nyc(change_nyc.file_nyc, change_nyc.name_nyc);
         lines_nyc.push(`#### \`${sig_nyc || change_nyc.name_nyc}\` in \`${change_nyc.file_nyc}\``);
         lines_nyc.push('');
 
-        const snippet_nyc = generateSourceSnippet_nyc(change_nyc.file_nyc, change_nyc.name_nyc);
+        const snippet_nyc = generate_source_snippet_nyc(change_nyc.file_nyc, change_nyc.name_nyc);
         if (snippet_nyc) {
           lines_nyc.push('<details>');
           lines_nyc.push('<summary>Source code</summary>');
@@ -191,36 +191,36 @@ function generateReviewDraft_nyc(analysis_nyc) {
       }
     }
 
-    if (commentChanges_nyc.length > 0) {
+    if (comment_changes_nyc.length > 0) {
       lines_nyc.push('### Updated Comments');
       lines_nyc.push('');
       lines_nyc.push('Comments were updated in the following files. Review if Notion documentation descriptions need updating:');
       lines_nyc.push('');
-      for (const change_nyc of commentChanges_nyc) {
+      for (const change_nyc of comment_changes_nyc) {
         lines_nyc.push(`- \`${change_nyc.file_nyc}\``);
       }
       lines_nyc.push('');
     }
 
-    if (significantChanges_nyc.length > 0) {
+    if (significant_changes_nyc.length > 0) {
       lines_nyc.push('### Significant Code Changes');
       lines_nyc.push('');
       lines_nyc.push('The following files had significant changes that may need documentation updates:');
       lines_nyc.push('');
-      for (const change_nyc of significantChanges_nyc) {
+      for (const change_nyc of significant_changes_nyc) {
         lines_nyc.push(
-          `- \`${change_nyc.file_nyc}\` (+${change_nyc.linesAdded_nyc}/-${change_nyc.linesRemoved_nyc} lines)`
+          `- \`${change_nyc.file_nyc}\` (+${change_nyc.lines_added_nyc}/-${change_nyc.lines_removed_nyc} lines)`
         );
       }
       lines_nyc.push('');
     }
 
-    if (flaggedChanges_nyc.length > 0) {
+    if (flagged_changes_nyc.length > 0) {
       lines_nyc.push('### Flagged for Review');
       lines_nyc.push('');
       lines_nyc.push('The following changes require careful human review before documentation is updated:');
       lines_nyc.push('');
-      for (const change_nyc of flaggedChanges_nyc) {
+      for (const change_nyc of flagged_changes_nyc) {
         const label_nyc =
           change_nyc.type === 'dependency_change'
             ? '**Dependency Change**'
@@ -241,11 +241,11 @@ function generateReviewDraft_nyc(analysis_nyc) {
   lines_nyc.push('**Suggested release notes entry for this push:**');
   lines_nyc.push('');
 
-  const allChanges_nyc = [...(tier2_nyc || [])];
-  if (allChanges_nyc.length > 0) {
+  const all_changes_nyc = [...(tier2_nyc || [])];
+  if (all_changes_nyc.length > 0) {
     lines_nyc.push(`### ${new Date().toISOString().split('T')[0]}`);
     lines_nyc.push('');
-    for (const change_nyc of allChanges_nyc) {
+    for (const change_nyc of all_changes_nyc) {
       lines_nyc.push(`- ${change_nyc.description}`);
     }
   } else {
@@ -258,21 +258,21 @@ function generateReviewDraft_nyc(analysis_nyc) {
 
 // ── Main ──
 
-const analysis_nyc = readAnalysis_nyc();
+const analysis_nyc = read_analysis_nyc();
 
 if (analysis_nyc.tier2_nyc.length === 0) {
   console.log('No changes requiring human review detected. Nothing to review.');
   process.exit(0);
 }
 
-const draft_nyc = generateReviewDraft_nyc(analysis_nyc);
+const draft_nyc = generate_review_draft_nyc(analysis_nyc);
 
 // Write to docs/proposed-notion-updates.md
-const docsDir_nyc = path_nyc.resolve(__dirname, '..', 'docs');
-if (!fs_nyc.existsSync(docsDir_nyc)) {
-  fs_nyc.mkdirSync(docsDir_nyc, { recursive: true });
+const docs_dir_nyc = path_nyc.resolve(__dirname, '..', 'docs');
+if (!fs_nyc.existsSync(docs_dir_nyc)) {
+  fs_nyc.mkdirSync(docs_dir_nyc, { recursive: true });
 }
 
-const outputPath_nyc = path_nyc.join(docsDir_nyc, 'proposed-notion-updates.md');
-fs_nyc.writeFileSync(outputPath_nyc, draft_nyc, 'utf-8');
-console.log(`Review draft written to ${outputPath_nyc}`);
+const output_path_nyc = path_nyc.join(docs_dir_nyc, 'proposed-notion-updates.md');
+fs_nyc.writeFileSync(output_path_nyc, draft_nyc, 'utf-8');
+console.log(`Review draft written to ${output_path_nyc}`);
