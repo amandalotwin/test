@@ -57,7 +57,7 @@ jobs:
   # ── Tier 1: Auto-update Notion directly ──
   auto-sync:
     needs: analyze
-    if: needs.analyze.outputs.has_tier1 == 'true'
+    if: needs.analyze.outputs.has_tier1 == 'true' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
