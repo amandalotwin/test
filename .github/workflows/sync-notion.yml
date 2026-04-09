@@ -10,10 +10,13 @@ on:
       - 'scripts/sync-notion.js'
       - 'scripts/analyze-changes.js'
       - 'scripts/generate-review.js'
+  issues:
+    types: [closed]
   workflow_dispatch:
 
 jobs:
   analyze:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       has_tier1: ${{ steps.analyze.outputs.has_tier1 }}
@@ -53,7 +56,7 @@ jobs:
   # ── Devin Automatic: Auto-update Notion directly ──
   auto-sync:
     needs: analyze
-    if: needs.analyze.outputs.has_tier1 == 'true' && github.event_name != 'workflow_dispatch'
+    if: needs.analyze.outputs.has_tier1 == 'true' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,10 +73,10 @@ jobs:
           echo "Devin Automatic changes detected — auto-updating Notion page..."
           node scripts/sync-notion.js
 
-  # ── Human Review: Auto-update Notion AND create a review issue ──
-  review-sync:
+  # ── Human Review: Create issue describing proposed Notion updates ──
+  review-issue:
     needs: analyze
-    if: needs.analyze.outputs.has_tier2 == 'true' && github.event_name != 'workflow_dispatch'
+    if: needs.analyze.outputs.has_tier2 == 'true' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -86,14 +89,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Auto-sync design spec to Notion
-        env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
-        run: |
-          echo "Tier 2 changes detected — auto-updating Notion page..."
-          node scripts/sync-notion.js
 
       - name: Download analysis
         uses: actions/download-artifact@v4
@@ -114,22 +109,45 @@ jobs:
           COMMIT_SHA="${{ github.sha }}"
           SHORT_SHA="${COMMIT_SHA:0:7}"
           gh issue create \
-            --title "Notion doc updated: please review (${{ github.event.head_commit.timestamp || github.run_id }})" \
+            --title "Notion doc update: review needed (${{ github.event.head_commit.timestamp || github.run_id }})" \
             --label "documentation" \
-            --body "## Notion Documentation Auto-Updated — Review Needed
+            --body "## Proposed Notion Documentation Updates
 
-          The Notion design spec page has been automatically updated with the following changes. Please review the Notion page to ensure the updates are accurate.
+          The following code changes were detected that will update the Notion design spec. **Close this issue to approve the update and sync to Notion.**
 
-          ### Changes detected
+          ### Changes to be applied
           ${CHANGES}
 
           ### What to do
-          1. Open the Notion design spec page and review the updated sections
-          2. If anything looks wrong, trigger a manual re-sync from the Actions tab or edit the Notion page directly
-          3. Close this issue once reviewed
+          1. Review the changes listed above
+          2. **Close this issue** to approve — this will trigger the Notion sync automatically
+          3. If you do not want to update Notion, add the \`skip-sync\` label before closing
 
           ### Commit
           [\`${SHORT_SHA}\`](${{ github.server_url }}/${{ github.repository }}/commit/${COMMIT_SHA})"
+
+  # ── Approved: Sync Notion when a review issue is closed ──
+  approved-sync:
+    if: >-
+      github.event_name == 'issues' &&
+      github.event.action == 'closed' &&
+      contains(github.event.issue.labels.*.name, 'documentation') &&
+      !contains(github.event.issue.labels.*.name, 'skip-sync')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync design spec to Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
+        run: |
+          echo "Review issue #${{ github.event.issue.number }} closed — syncing Notion page..."
+          node scripts/sync-notion.js
 
   # ── Fallback: Full sync on manual trigger ──
   full-sync:
