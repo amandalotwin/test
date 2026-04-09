@@ -1,6 +1,8 @@
 const { parseRequest } = require('./parseRequest');
 const { checkAvailability, makeReservation } = require('./mockApi');
 
+const largePartyThreshold = 6;
+
 /**
  * Orchestrates a reservation request from natural language text.
  *
@@ -29,11 +31,17 @@ async function handleReservationRequest(text) {
 
   const { confirmation } = await makeReservation({ date, time, partySize });
 
+  const metrics = {};
+  if (partySize > largePartyThreshold) {
+    metrics.largeParty = true;
+  }
+
   return {
     success: true,
     message: `Reservation confirmed! Your confirmation number is ${confirmation}.`,
     confirmation,
     details: { date, time, partySize },
+    metrics,
   };
 }
 

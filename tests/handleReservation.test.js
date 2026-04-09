@@ -1,8 +1,8 @@
 const { handleReservationRequest } = require('../src/handleReservation');
-const { _resetBookings } = require('../src/mockApi');
+const { resetBookings } = require('../src/mockApi');
 
 beforeEach(() => {
-  _resetBookings();
+  resetBookings();
 });
 
 describe('handleReservationRequest', () => {
@@ -56,7 +56,7 @@ describe('handleReservationRequest', () => {
   });
 
   test('resets bookings between tests', async () => {
-    // This should succeed because _resetBookings() runs before each test
+    // This should succeed because resetBookings() runs before each test
     const result = await handleReservationRequest('table for 10 on March 15 at 7pm');
     expect(result.success).toBe(true);
   });

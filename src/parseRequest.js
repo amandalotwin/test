@@ -12,7 +12,7 @@ function parseRequest(text) {
   };
 }
 
-const MONTH_MAP = {
+const monthMap = {
   january: 1, february: 2, march: 3, april: 4,
   may: 5, june: 6, july: 7, august: 8,
   september: 9, october: 10, november: 11, december: 12,
@@ -31,12 +31,12 @@ function parseDate(text) {
 
   // Month name + day: "March 15" or "March 15th"
   const monthNamePattern = new RegExp(
-    `(${Object.keys(MONTH_MAP).join('|')})\\s+(\\d{1,2})(?:st|nd|rd|th)?`,
+    `(${Object.keys(monthMap).join('|')})\\s+(\\d{1,2})(?:st|nd|rd|th)?`,
     'i'
   );
   const monthNameMatch = text.match(monthNamePattern);
   if (monthNameMatch) {
-    const monthNum = MONTH_MAP[monthNameMatch[1].toLowerCase()];
+    const monthNum = monthMap[monthNameMatch[1].toLowerCase()];
     const day = parseInt(monthNameMatch[2], 10);
     const year = inferYear(monthNum, day);
     return formatDate(year, monthNum, day);
