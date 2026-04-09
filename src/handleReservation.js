@@ -2,6 +2,7 @@ const { parseRequest } = require('./parseRequest');
 const { checkAvailability, makeReservation } = require('./mockApi');
 
 const largePartyThreshold = 6;
+const lateNightHour = 21;
 
 /**
  * Orchestrates a reservation request from natural language text.
@@ -34,6 +35,10 @@ async function handleReservationRequest(text) {
   const metrics = {};
   if (partySize > largePartyThreshold) {
     metrics.largeParty = true;
+  }
+  const hour = parseInt(time.split(':')[0], 10);
+  if (hour >= lateNightHour) {
+    metrics.lateNight = true;
   }
 
   return {
