@@ -37,6 +37,9 @@ async function handleReservationRequest_nyc(text_nyc) {
     metrics_nyc.largeParty_nyc = true;
   }
   const hour_nyc = parseInt(time_nyc.split(':')[0], 10);
+  if (hour_nyc >= 17 && hour_nyc < 19) {
+    metrics_nyc.happy_hour_nyc = true;
+  }
   if (hour_nyc >= lateNightHour_nyc) {
     metrics_nyc.lateNight_nyc = true;
   }

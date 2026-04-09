@@ -224,23 +224,66 @@ function extractNames_nyc(parseRequestSrc_nyc, mockApiSrc_nyc, handleReservation
   }
 
   // Extract response field names from the success return in handleReservation
-  const successReturnMatch_nyc = handleReservationSrc_nyc.match(/return\s*\{[^}]*\w+:\s*true[^}]*\}/s);
+  // Use brace-depth tracking to correctly handle nested objects and template literals
   let successField_nyc = 'success';
   let messageField_nyc = 'message';
   let confirmationField_nyc = 'confirmation';
   let detailsField_nyc = 'details';
   let metricsField_nyc = 'metrics';
-  if (successReturnMatch_nyc) {
-    const fields_nyc = Array.from(successReturnMatch_nyc[0].matchAll(/(\w+)\s*[,:]/g)).map(function(m_nyc) { return m_nyc[1]; });
-    if (fields_nyc.length >= 2) {
-      successField_nyc = fields_nyc[0];
-      messageField_nyc = fields_nyc[1];
+  const srcLines_nyc = handleReservationSrc_nyc.split('\n');
+  let braceDepth_nyc = 0;
+  let inReturn_nyc = false;
+  let returnBlock_nyc = '';
+  let successBlock_nyc = null;
+  for (let i_nyc = 0; i_nyc < srcLines_nyc.length; i_nyc++) {
+    const line_nyc = srcLines_nyc[i_nyc];
+    if (!inReturn_nyc && /return\s*\{/.test(line_nyc)) {
+      inReturn_nyc = true;
+      braceDepth_nyc = 0;
+      returnBlock_nyc = '';
     }
-    const cf_nyc = fields_nyc.find(function(f_nyc) { return /confirm/i.test(f_nyc); });
+    if (inReturn_nyc) {
+      returnBlock_nyc += line_nyc + '\n';
+      for (const ch_nyc of line_nyc) {
+        if (ch_nyc === '{') braceDepth_nyc++;
+        if (ch_nyc === '}') braceDepth_nyc--;
+      }
+      if (braceDepth_nyc <= 0) {
+        if (/\w+:\s*true/.test(returnBlock_nyc)) {
+          successBlock_nyc = returnBlock_nyc;
+        }
+        inReturn_nyc = false;
+        returnBlock_nyc = '';
+      }
+    }
+  }
+  if (successBlock_nyc) {
+    // Extract top-level fields using brace depth (handles both 'key:' and shorthand 'key,')
+    const blockLines_nyc = successBlock_nyc.split('\n');
+    let depth_nyc = 0;
+    const topFields_nyc = [];
+    for (const fl_nyc of blockLines_nyc) {
+      const prevDepth_nyc = depth_nyc;
+      for (const ch_nyc of fl_nyc) {
+        if (ch_nyc === '{') depth_nyc++;
+        if (ch_nyc === '}') depth_nyc--;
+      }
+      if (prevDepth_nyc === 1 && depth_nyc >= 1) {
+        const mExplicit_nyc = fl_nyc.match(/^\s*(\w+)\s*:/);
+        const mShorthand_nyc = fl_nyc.match(/^\s*(\w+)\s*,?\s*$/);
+        if (mExplicit_nyc) topFields_nyc.push(mExplicit_nyc[1]);
+        else if (mShorthand_nyc) topFields_nyc.push(mShorthand_nyc[1]);
+      }
+    }
+    if (topFields_nyc.length >= 2) {
+      successField_nyc = topFields_nyc[0];
+      messageField_nyc = topFields_nyc[1];
+    }
+    const cf_nyc = topFields_nyc.find(function(f_nyc) { return /confirm/i.test(f_nyc); });
     if (cf_nyc) confirmationField_nyc = cf_nyc;
-    const df_nyc = fields_nyc.find(function(f_nyc) { return /detail/i.test(f_nyc); });
+    const df_nyc = topFields_nyc.find(function(f_nyc) { return /detail/i.test(f_nyc); });
     if (df_nyc) detailsField_nyc = df_nyc;
-    const mf_nyc = fields_nyc.find(function(f_nyc) { return /metric/i.test(f_nyc); });
+    const mf_nyc = topFields_nyc.find(function(f_nyc) { return /metric/i.test(f_nyc); });
     if (mf_nyc) metricsField_nyc = mf_nyc;
   }
 
@@ -597,7 +640,7 @@ function buildPageBlocks_nyc() {
         "    'INSERT INTO reservations (confirmation, date, time, party_size) VALUES (?, ?, ?, ?)',\n" +
         `    [confirmation_nyc, ${n_nyc.dateField}, ${n_nyc.timeField}, ${n_nyc.partySizeField}]\n` +
         '  );\n' +
-        '  return { confirmation: confirmation_nyc };\n' +
+        `  return { ${n_nyc.confirmField}: confirmation_nyc };\n` +
         '}',
       'javascript'
     ),
