@@ -398,10 +398,12 @@ function build_page_blocks_nyc() {
       [
         ['src/parseRequest.js', 'Regex-based natural language parser \u2014 extracts date, time, and party size'],
         ['src/mockApi.js', 'Mock booking database \u2014 check availability and create reservations'],
-        ['src/handleReservation.js', 'Orchestrator \u2014 ties parsing, availability, and booking together'],
+        ['src/mockEmailApi.js', 'Mock email service \u2014 send confirmation emails after successful reservations'],
+        ['src/handleReservation.js', 'Orchestrator \u2014 ties parsing, availability, booking, and email together'],
         ['src/index.js', 'Demo entry point \u2014 run with node src/index.js'],
         ['tests/parseRequest.test.js', '10 unit tests for the parser'],
-        ['tests/handleReservation.test.js', '7 integration tests for the full flow'],
+        ['tests/handleReservation.test.js', '13 integration tests for the full flow including email confirmation'],
+        ['tests/mockEmailApi.test.js', '6 unit tests for the email service'],
       ]
     ),
     divider_nyc(),
@@ -685,13 +687,14 @@ function build_page_blocks_nyc() {
 
     // --- Testing ---
     heading1_nyc('Testing'),
-    paragraph_nyc('Run all 17 tests:'),
+    paragraph_nyc('Run all 29 tests:'),
     code_block_nyc('npm test', 'bash'),
     table_block_nyc(
       ['Test Suite', 'Count', 'What It Covers'],
       [
         ['parseRequest.test.js', '10', 'Date formats, time formats, party size patterns, edge cases, unparseable input'],
-        ['handleReservation.test.js', '7', 'Successful booking, capacity exhaustion, incomplete input, missing fields, state reset'],
+        ['handleReservation.test.js', '13', 'Successful booking, capacity exhaustion, incomplete input, missing fields, state reset, email confirmation'],
+        ['mockEmailApi.test.js', '6', 'Email sending, validation, tracking, reset'],
       ]
     ),
     divider_nyc(),
