@@ -5,8 +5,8 @@
  * and replaces the content of the target Notion page.
  *
  * Required env vars:
- *   NOTION_TOKEN_nyc   - Notion integration token (starts with ntn_)
- *   NOTION_PAGE_ID_nyc - ID of the Notion page to update
+ *   NOTION_TOKEN   - Notion integration token (starts with ntn_)
+ *   NOTION_PAGE_ID - ID of the Notion page to update
  */
 
 const fs_nyc = require('fs');
@@ -15,11 +15,11 @@ const path_nyc = require('path');
 const NOTION_API_nyc = 'https://api.notion.com/v1';
 const NOTION_VERSION_nyc = '2022-06-28';
 
-const NOTION_TOKEN_nyc = process.env.NOTION_TOKEN_nyc;
-const NOTION_PAGE_ID_nyc = process.env.NOTION_PAGE_ID_nyc;
+const NOTION_TOKEN_nyc = process.env.NOTION_TOKEN;
+const NOTION_PAGE_ID_nyc = process.env.NOTION_PAGE_ID;
 
 if (!NOTION_TOKEN_nyc || !NOTION_PAGE_ID_nyc) {
-  console.error('Missing NOTION_TOKEN_nyc or NOTION_PAGE_ID_nyc environment variables.');
+  console.error('Missing NOTION_TOKEN or NOTION_PAGE_ID environment variables.');
   process.exit(1);
 }
 
@@ -32,12 +32,12 @@ const headers = {
 // ─── Notion API helpers ───────────────────────────────────────────────
 
 async function notionRequest_nyc(endpoint_nyc, method_nyc = 'GET', body_nyc = null) {
-  const opts_nyc = { method_nyc, headers };
-  if (body_nyc) opts_nyc.body_nyc = JSON.stringify(body_nyc);
+  const opts_nyc = { method: method_nyc, headers };
+  if (body_nyc) opts_nyc.body = JSON.stringify(body_nyc);
   const res_nyc = await fetch(`${NOTION_API_nyc}${endpoint_nyc}`, opts_nyc);
   if (!res_nyc.ok) {
     const text_nyc = await res_nyc.text();
-    throw new Error(`Notion API ${method_nyc} ${endpoint_nyc} failed (${res_nyc.status}): ${text}`);
+    throw new Error(`Notion API ${method_nyc} ${endpoint_nyc} failed (${res_nyc.status}): ${text_nyc}`);
   }
   return res_nyc.json();
 }
@@ -47,9 +47,9 @@ async function getChildBlocks_nyc(blockId_nyc) {
   let cursor_nyc;
   do {
     const qs_nyc = cursor_nyc ? `?start_cursor=${cursor_nyc}` : '';
-    const data_nyc = await notionRequest_nyc(`/blocks/${blockId_nyc}/children_nyc${qs_nyc}`);
-    blocks.push(...data.results);
-    cursor_nyc = data.has_more ? data.next_cursor : null;
+    const data_nyc = await notionRequest_nyc(`/blocks/${blockId_nyc}/children${qs_nyc}`);
+    blocks_nyc.push(...data_nyc.results);
+    cursor_nyc = data_nyc.has_more ? data_nyc.next_cursor : null;
   } while (cursor_nyc);
   return blocks_nyc;
 }
@@ -61,8 +61,8 @@ async function deleteBlock_nyc(blockId_nyc) {
 async function appendChildren_nyc(blockId_nyc, children_nyc) {
   // Notion limits to 100 blocks per request
   for (let i_nyc = 0; i_nyc < children_nyc.length; i_nyc += 100) {
-    const batch_nyc = children_nyc.slice(i, i + 100);
-    await notionRequest_nyc(`/blocks/${blockId_nyc}/children_nyc`, 'PATCH', { children_nyc: batch_nyc });
+    const batch_nyc = children_nyc.slice(i_nyc, i_nyc + 100);
+    await notionRequest_nyc(`/blocks/${blockId_nyc}/children`, 'PATCH', { children: batch_nyc });
   }
 }
 
@@ -70,12 +70,12 @@ async function appendChildren_nyc(blockId_nyc, children_nyc) {
 
 function richText_nyc(content, opts_nyc = {}) {
   const text_nyc = { content };
-  if (opts_nyc.link) text.link = { url: opts_nyc.link };
+  if (opts_nyc.link) text_nyc.link = { url: opts_nyc.link };
   const annotations_nyc = {};
   if (opts_nyc.bold) annotations_nyc.bold = true;
   if (opts_nyc.italic) annotations_nyc.italic = true;
   if (opts_nyc.code) annotations_nyc.code = true;
-  return { type: 'text', text, ...(Object.keys(annotations_nyc).length ? { annotations_nyc } : {}) };
+  return { type: 'text', text: text_nyc, ...(Object.keys(annotations_nyc).length ? { annotations: annotations_nyc } : {}) };
 }
 
 function heading1_nyc(text) {
@@ -106,8 +106,8 @@ function paragraph_nyc(segments_nyc) {
   if (typeof segments_nyc === 'string') segments_nyc = [richText_nyc(segments_nyc)];
   return {
     object: 'block',
-    type: 'paragraph_nyc',
-    paragraph_nyc: { rich_text: segments_nyc },
+    type: 'paragraph',
+    paragraph: { rich_text: segments_nyc },
   };
 }
 
@@ -125,20 +125,20 @@ function codeBlock_nyc(content, language_nyc = 'javascript') {
   const MAX_LEN_nyc = 2000;
   const segments_nyc = [];
   for (let i_nyc = 0; i_nyc < content.length; i_nyc += MAX_LEN_nyc) {
-    segments_nyc.push(richText_nyc(content.slice(i, i + MAX_LEN_nyc)));
+    segments_nyc.push(richText_nyc(content.slice(i_nyc, i_nyc + MAX_LEN_nyc)));
   }
   return {
     object: 'block',
     type: 'code',
     code: {
       rich_text: segments_nyc,
-      language_nyc,
+      language: language_nyc,
     },
   };
 }
 
 function divider_nyc() {
-  return { object: 'block', type: 'divider_nyc', divider_nyc: {} };
+  return { object: 'block', type: 'divider', divider: {} };
 }
 
 function tableBlock_nyc(headers, rows) {
@@ -151,7 +151,7 @@ function tableBlock_nyc(headers, rows) {
   const dataRows_nyc = rows.map((row_nyc) => ({
     object: 'block',
     type: 'table_row',
-    table_row: { cells: row.map((cell_nyc) => [richText_nyc(cell_nyc)]) },
+    table_row: { cells: row_nyc.map((cell_nyc) => [richText_nyc(cell_nyc)]) },
   }));
   return {
     object: 'block',
@@ -160,7 +160,7 @@ function tableBlock_nyc(headers, rows) {
       table_width: width_nyc,
       has_column_header: true,
       has_row_header: false,
-      children_nyc: [headerRow_nyc, ...dataRows_nyc],
+      children: [headerRow_nyc, ...dataRows_nyc],
     },
   };
 }
@@ -168,10 +168,10 @@ function tableBlock_nyc(headers, rows) {
 function callout_nyc(text, emoji_nyc = 'ℹ️') {
   return {
     object: 'block',
-    type: 'callout_nyc',
-    callout_nyc: {
+    type: 'callout',
+    callout: {
       rich_text: [richText_nyc(text)],
-      icon: { type: 'emoji_nyc', emoji_nyc },
+      icon: { type: 'emoji', emoji: emoji_nyc },
     },
   };
 }
@@ -192,14 +192,14 @@ function buildPageBlocks_nyc() {
   const indexSrc_nyc = readSource_nyc('index.js');
 
   // Extract capacity from mockApi.js
-  const capacityMatch_nyc = mockApiSrc_nyc.match(/const capacity = (\d+)/);
+  const capacityMatch_nyc = mockApiSrc_nyc.match(/const capacity_nyc = (\d+)/);
   const capacity_nyc = capacityMatch_nyc ? capacityMatch_nyc[1] : '20';
 
   const blocks_nyc = [
     // ─── Overview ───
     heading1_nyc('Overview'),
     paragraph_nyc(
-      'The Reservation System is a lightweight Node.js module that allows any restaurant to accept reservations through natural language_nyc input. It parses human-readable requests, checks table availability, and books the reservation — all through a simple JavaScript API.'
+      'The Reservation System is a lightweight Node.js module that allows any restaurant to accept reservations through natural language input. It parses human-readable requests, checks table availability, and books the reservation — all through a simple JavaScript API.'
     ),
     callout_nyc(
       'This system is designed to be integrated into any restaurant\'s existing tech stack. Replace the mock API layer (mockApi.js) with calls to your own database or booking service to go live.',
@@ -220,7 +220,7 @@ function buildPageBlocks_nyc() {
         '│            handleReservationRequest()                │\n' +
         '│                  (Orchestrator)                      │\n' +
         '│                                                     │\n' +
-        '│  1. Parse the natural language_nyc input                 │\n' +
+        '│  1. Parse the natural language input                 │\n' +
         '│  2. Validate all fields are present                  │\n' +
         '│  3. Check availability                               │\n' +
         '│  4. Book the reservation                             │\n' +
@@ -239,7 +239,7 @@ function buildPageBlocks_nyc() {
     tableBlock_nyc(
       ['File', 'Purpose'],
       [
-        ['src/parseRequest.js', 'Regex-based natural language_nyc parser — extracts date, time, and party size'],
+        ['src/parseRequest.js', 'Regex-based natural language parser — extracts date, time, and party size'],
         ['src/mockApi.js', 'Mock booking database — check availability and create reservations'],
         ['src/handleReservation.js', 'Orchestrator — ties parsing, availability, and booking together'],
         ['src/index.js', 'Demo entry point — run with node src/index.js'],
@@ -254,7 +254,7 @@ function buildPageBlocks_nyc() {
     paragraph_nyc([richText_nyc('File: '), richText_nyc('src/parseRequest.js', { code: true })]),
 
     heading2_nyc('parseRequest(text)'),
-    paragraph_nyc('Parses a natural language_nyc string and extracts reservation details using regex.'),
+    paragraph_nyc('Parses a natural language string and extracts reservation details using regex.'),
     paragraph_nyc([richText_nyc('Input: ', { bold: true }), richText_nyc('A string like "I\'d like a table for 4 on March 15th at 7pm"')]),
     paragraph_nyc([richText_nyc('Output:', { bold: true })]),
     codeBlock_nyc('{\n  "date": "2026-03-15",\n  "time": "19:00",\n  "partySize": 4\n}', 'json'),
@@ -317,7 +317,7 @@ function buildPageBlocks_nyc() {
       ]
     ),
     paragraph_nyc([richText_nyc('Returns: ', { bold: true }), richText_nyc('Promise<{ available: boolean }>')]),
-    paragraph_nyc(`A time slot (date + time combination) has a capacity of ${capacity} guests. If the total booked guests plus the new party size exceeds ${capacity}, the slot is unavailable.`),
+    paragraph_nyc(`A time slot (date + time combination) has a capacity of ${capacity_nyc} guests. If the total booked guests plus the new party size exceeds ${capacity_nyc}, the slot is unavailable.`),
     codeBlock_nyc(
       'const { checkAvailability } = require(\'./mockApi\');\n\n' +
         'const result = await checkAvailability({\n' +
@@ -370,9 +370,9 @@ function buildPageBlocks_nyc() {
 
     heading2_nyc('handleReservationRequest(text)'),
     paragraph_nyc(
-      'The main entry point for processing a reservation. Takes a natural language_nyc string, parses it, checks availability, and either books the reservation or returns an appropriate error.'
+      'The main entry point for processing a reservation. Takes a natural language string, parses it, checks availability, and either books the reservation or returns an appropriate error.'
     ),
-    paragraph_nyc([richText_nyc('Input: ', { bold: true }), richText_nyc('string — a natural language_nyc reservation request')]),
+    paragraph_nyc([richText_nyc('Input: ', { bold: true }), richText_nyc('string — a natural language reservation request')]),
     paragraph_nyc([richText_nyc('Returns: ', { bold: true }), richText_nyc('Promise<object> — one of three response shapes:')]),
 
     heading3_nyc('Success Response'),
@@ -537,7 +537,7 @@ function buildPageBlocks_nyc() {
     tableBlock_nyc(
       ['Setting', 'Current Value', 'Location', 'Description'],
       [
-        ['Slot capacity', `${capacity} guests`, 'src/mockApi.js line 1', 'Maximum total guests per date+time slot'],
+        ['Slot capacity', `${capacity_nyc} guests`, 'src/mockApi.js line 1', 'Maximum total guests per date+time slot'],
       ]
     ),
     paragraph_nyc(
@@ -579,7 +579,7 @@ function buildPageBlocks_nyc() {
 
     heading3_nyc('v1.0.0 — 2026-03-15'),
     bulletItem_nyc('Initial release of the reservation system'),
-    bulletItem_nyc('Natural language_nyc parser supporting ISO dates, month names, US numeric formats'),
+    bulletItem_nyc('Natural language parser supporting ISO dates, month names, US numeric formats'),
     bulletItem_nyc('Mock booking API with availability checking and confirmation ID generation'),
     bulletItem_nyc([richText_nyc('Demo entry point ('), richText_nyc('node src/index.js', { code: true }), richText_nyc(')')]),
     bulletItem_nyc('10 unit tests for parser module'),
@@ -601,18 +601,18 @@ function buildPageBlocks_nyc() {
 async function main_nyc() {
   console.log('Building new page content from source files...');
   const blocks_nyc = buildPageBlocks_nyc();
-  console.log(`Generated ${blocks.length} blocks.`);
+  console.log(`Generated ${blocks_nyc.length} blocks.`);
 
   console.log('Fetching existing blocks from Notion page...');
   const existingBlocks_nyc = await getChildBlocks_nyc(NOTION_PAGE_ID_nyc);
   console.log(`Found ${existingBlocks_nyc.length} existing blocks. Deleting...`);
 
   for (const block_nyc of existingBlocks_nyc) {
-    await deleteBlock_nyc(block.id);
+    await deleteBlock_nyc(block_nyc.id);
   }
   console.log('Existing blocks deleted. Appending new content...');
 
-  await appendChildren_nyc(NOTION_PAGE_ID_nyc, blocks);
+  await appendChildren_nyc(NOTION_PAGE_ID_nyc, blocks_nyc);
   console.log('Notion page updated successfully!');
 }
 
