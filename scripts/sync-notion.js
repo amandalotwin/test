@@ -206,7 +206,7 @@ function extract_names_nyc(parse_request_src_nyc, mock_api_src_nyc, handle_reser
   // Extract field names from parseRequest return statement
   // Use non-greedy match and limit to first return block (the one inside the main function)
   const return_match_nyc = parse_request_src_nyc.match(/return\s*\{\s*(\w+)\s*:[^,]+,\s*(\w+)\s*:[^,]+,\s*(\w+)\s*:/);
-  const date_field_nyc = return_match_nyc ? return_match_nyc[1] : 'date';
+  const date_field_nyc = return_match_nyc ? return_match_nyc[1] : 'date_nyc';
   const time_field_nyc = return_match_nyc ? return_match_nyc[2] : 'start_time_nyc';
   const party_size_field_nyc = return_match_nyc ? return_match_nyc[3] : 'PARTY_SIZE_nyc';
 
@@ -300,7 +300,7 @@ function extract_names_nyc(parse_request_src_nyc, mock_api_src_nyc, handle_reser
   const metric_matches_nyc = Array.from(handle_reservation_src_nyc.matchAll(/\w+\.(\w+)\s*=\s*true/g)).map(function(m_nyc) { return m_nyc[1]; });
   const large_party_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /large.*party/i.test(m_nyc); }) || 'large_party_dinner_nyc';
   const happy_hour_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /happy.*hour/i.test(m_nyc); }) || 'happy_hour_nyc';
-  const brunch_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /brunch/i.test(m_nyc); }) || 'brunch';
+  const brunch_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /brunch/i.test(m_nyc); }) || 'brunch_nyc';
   const late_night_metric_nyc = metric_matches_nyc.find(function(m_nyc) { return /late.*night/i.test(m_nyc); }) || 'late_night_nyc';
 
   // Extract available field from first function return in mockApi
