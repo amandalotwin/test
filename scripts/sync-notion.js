@@ -384,11 +384,23 @@ function buildPageBlocks() {
         '  "details": {\n' +
         '    "date": "2026-12-25",\n' +
         '    "time": "19:00",\n' +
-        '    "partySize": 4\n' +
+        '    "partySize": 8\n' +
+        '  },\n' +
+        '  "metrics": {\n' +
+        '    "largeParty": true\n' +
         '  }\n' +
         '}',
       'json'
     ),
+    paragraph([
+      richText('The '),
+      richText('metrics', { code: true }),
+      richText(' object is included on all successful responses. '),
+      richText('largeParty', { code: true }),
+      richText(' is set to '),
+      richText('true', { code: true }),
+      richText(' when the party size exceeds 6 guests.'),
+    ]),
 
     heading3('Parsing Failure (missing date, time, or party size)'),
     codeBlock(
