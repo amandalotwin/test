@@ -229,7 +229,7 @@ function analyzeDiff(file, diff, tier1, tier2, tier3) {
   }
 
   // ── Detect API type changes e.g. SOAP to REST (Tier 3) ──
-  const apiTypePattern = /\b(soap|restful|rest\s*api|graphql|grpc|websocket|xml-rpc|json-rpc)\b/i;
+  const apiTypePattern = /\b(soap|restful|rest(?:\s*api)?|graphql|grpc|websocket|xml-rpc|json-rpc)\b/i;
   const removedApiTypes = removedLines.filter((l) => apiTypePattern.test(l));
   const addedApiTypes = addedLines.filter((l) => apiTypePattern.test(l));
   if (removedApiTypes.length > 0 && addedApiTypes.length > 0) {
