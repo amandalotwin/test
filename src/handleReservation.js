@@ -5,6 +5,8 @@ const largePartyThreshold_nyc = 6;
 const happyHourStart_nyc = 17;
 const happyHourEnd_nyc = 19;
 const lateNightHour_nyc = 21;
+const brunchStart_nyc = 10;
+const brunchEnd_nyc = 13;
 
 /**
  * Orchestrates a reservation request from natural language text.
@@ -41,6 +43,9 @@ async function handleReservationRequest_nyc(text_nyc) {
   const hour_nyc = parseInt(time_nyc.split(':')[0], 10);
   if (hour_nyc >= happyHourStart_nyc && hour_nyc < happyHourEnd_nyc) {
     metrics_nyc.happy_hour_nyc = true;
+  }
+  if (hour_nyc >= brunchStart_nyc && hour_nyc < brunchEnd_nyc) {
+    metrics_nyc.brunch_nyc = true;
   }
   if (hour_nyc >= lateNightHour_nyc) {
     metrics_nyc.lateNight_nyc = true;
